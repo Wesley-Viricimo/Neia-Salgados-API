@@ -1,12 +1,12 @@
 package org.neiasalgados.services;
 
 import jakarta.transaction.Transactional;
-import org.neiasalgados.domain.dto.CategoryDTO;
-import org.neiasalgados.domain.dto.MessageResponseDTO;
-import org.neiasalgados.domain.dto.PageResponseDTO;
-import org.neiasalgados.domain.dto.ResponseDataDTO;
+import org.neiasalgados.domain.dto.response.CategoryResponseDTO;
+import org.neiasalgados.domain.dto.response.MessageResponseDTO;
+import org.neiasalgados.domain.dto.response.PageResponseDTO;
+import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Category;
-import org.neiasalgados.domain.vo.CategoryVO;
+import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.repository.CategoryRepository;
@@ -28,8 +28,8 @@ public class CategoryService {
     }
 
     @Transactional
-    public ResponseDataDTO<CategoryDTO> createCategory(CategoryVO categoryVO) {
-        String upperDescription = categoryVO.getDescription().toUpperCase();
+    public ResponseDataDTO<CategoryResponseDTO> createCategory(CategoryRequestDTO categoryRequestDTO) {
+        String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
 
         if (this.categoryRepository.findByDescription(upperDescription).isPresent())
             throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
@@ -37,20 +37,20 @@ public class CategoryService {
         var categoryEntity = new Category(upperDescription);
         this.categoryRepository.save(categoryEntity);
 
-        var categoryDTO = new CategoryDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
+        var categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
 
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
-    public ResponseDataDTO<PageResponseDTO<CategoryDTO>> findAll(String description, Pageable pageable) {
+    public ResponseDataDTO<PageResponseDTO<CategoryResponseDTO>> findAll(String description, Pageable pageable) {
         Page<Category> categoryPage = Optional.ofNullable(description)
                 .filter(desc -> !desc.isEmpty())
                 .map(desc -> categoryRepository.findByDescriptionContaining(desc.toUpperCase(), pageable))
                 .orElseGet(() -> categoryRepository.findAll(pageable));
 
-        Page<CategoryDTO> categoryDTOPage = categoryPage.map(category -> new CategoryDTO(category.getIdCategory(), category.getDescription()));
+        Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(category -> new CategoryResponseDTO(category.getIdCategory(), category.getDescription()));
 
         var pageResponse = new PageResponseDTO<>(categoryDTOPage);
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
@@ -59,13 +59,13 @@ public class CategoryService {
     }
 
     @Transactional
-    public ResponseDataDTO<CategoryDTO> updateCategory(CategoryVO categoryVO, Long idCategory) {
+    public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryRequestDTO categoryRequestDTO, Long idCategory) {
         Optional<Category> category = categoryRepository.findById(idCategory);
 
         if (category.isEmpty())
             throw new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory));
 
-        String upperDescription = categoryVO.getDescription().toUpperCase();
+        String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
         Optional<Category> existingCategory = categoryRepository.findByDescription(upperDescription);
 
         if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(idCategory))
@@ -75,7 +75,7 @@ public class CategoryService {
         updatedCategory.setDescription(upperDescription);
         categoryRepository.save(updatedCategory);
 
-        var categoryDTO = new CategoryDTO(updatedCategory.getIdCategory(), updatedCategory.getDescription());
+        var categoryDTO = new CategoryResponseDTO(updatedCategory.getIdCategory(), updatedCategory.getDescription());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());

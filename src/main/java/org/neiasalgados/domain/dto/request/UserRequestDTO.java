@@ -1,10 +1,10 @@
-package org.neiasalgados.domain.vo;
+package org.neiasalgados.domain.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.br.CPF;
 
-public class UserVO {
+public class UserRequestDTO {
     @NotBlank(message = "O campo 'name' não pode ser vazio")
     private String name;
 
@@ -25,9 +25,9 @@ public class UserVO {
     @NotBlank(message = "O campo 'password' não pode ser vazio")
     private String password;
 
-    public UserVO() {}
+    public UserRequestDTO() {}
 
-    public UserVO(String name, String surname, String cpf, String phone, String email, String password) {
+    public UserRequestDTO(String name, String surname, String cpf, String phone, String email, String password) {
         this.name = name;
         this.surname = surname;
         this.cpf = cpf;

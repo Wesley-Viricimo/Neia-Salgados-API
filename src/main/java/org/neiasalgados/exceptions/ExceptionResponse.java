@@ -1,6 +1,6 @@
 package org.neiasalgados.exceptions;
 
-import org.neiasalgados.domain.dto.MessageResponseDTO;
+import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

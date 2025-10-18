@@ -1,4 +1,4 @@
-package org.neiasalgados.domain.dto;
+package org.neiasalgados.domain.dto.response;
 
 import java.io.Serializable;
 

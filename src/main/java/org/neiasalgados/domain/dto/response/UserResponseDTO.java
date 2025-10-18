@@ -1,10 +1,6 @@
-package org.neiasalgados.domain.dto;
+package org.neiasalgados.domain.dto.response;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.br.CPF;
-
-public class UserDTO {
+public class UserResponseDTO {
     private String name;
 
     private String surname;
@@ -15,9 +11,9 @@ public class UserDTO {
 
     private String email;
 
-    public UserDTO() {}
+    public UserResponseDTO() {}
 
-    public UserDTO(String name, String surname, String cpf, String phone, String email) {
+    public UserResponseDTO(String name, String surname, String cpf, String phone, String email) {
         this.name = name;
         this.surname = surname;
         this.cpf = cpf;

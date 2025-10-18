@@ -1,13 +1,13 @@
 package org.neiasalgados.services;
 
 import jakarta.transaction.Transactional;
-import org.neiasalgados.domain.dto.MessageResponseDTO;
-import org.neiasalgados.domain.dto.ResponseDataDTO;
-import org.neiasalgados.domain.dto.UserDTO;
+import org.neiasalgados.domain.dto.response.MessageResponseDTO;
+import org.neiasalgados.domain.dto.response.ResponseDataDTO;
+import org.neiasalgados.domain.dto.response.UserResponseDTO;
 import org.neiasalgados.domain.entity.User;
 import org.neiasalgados.domain.entity.UserActivationCode;
 import org.neiasalgados.domain.enums.UserRole;
-import org.neiasalgados.domain.vo.UserVO;
+import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.DuplicateFieldsException;
 import org.neiasalgados.repository.UserActivationCodeRepository;
@@ -22,7 +22,6 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final UserActivationCodeRepository userActivationCodeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
@@ -33,50 +32,49 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseDataDTO<UserDTO> createUser(UserVO userVO) {
+    public ResponseDataDTO<UserResponseDTO> createUser(UserRequestDTO userRequestDTO) {
         List<User> existingUsers = userRepository.findByEmailOrPhoneOrCpf(
-                userVO.getEmail(),
-                userVO.getPhone(),
-                userVO.getCpf()
+                userRequestDTO.getEmail(),
+                userRequestDTO.getPhone(),
+                userRequestDTO.getCpf()
         );
 
-        if (userVO.getPhone().length() > 11)
+        if (userRequestDTO.getPhone().length() > 11)
             throw new DataIntegrityViolationException("Telefone deve conter no máximo 11 dígitos (DDD + Número)");
 
         if (!existingUsers.isEmpty()) {
             List<String> duplicateFields = new ArrayList<>();
             existingUsers.forEach(user -> {
-                if (user.getEmail().equals(userVO.getEmail())) {
-                    duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userVO.getEmail()));
+                if (user.getEmail().equals(userRequestDTO.getEmail())) {
+                    duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userRequestDTO.getEmail()));
                 }
-                if (user.getPhone().equals(userVO.getPhone())) {
-                    duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userVO.getPhone()));
+                if (user.getPhone().equals(userRequestDTO.getPhone())) {
+                    duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userRequestDTO.getPhone()));
                 }
-                if (user.getCpf().equals(userVO.getCpf())) {
-                    duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userVO.getCpf()));
+                if (user.getCpf().equals(userRequestDTO.getCpf())) {
+                    duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userRequestDTO.getCpf()));
                 }
             });
 
             throw new DuplicateFieldsException(duplicateFields);
         }
 
-        var user = new User(
-                userVO.getName(),
-                userVO.getSurname(),
-                userVO.getCpf(),
-                userVO.getPhone(),
-                userVO.getEmail(),
-                this.passwordEncoder.encode(userVO.getPassword()),
+        var user = userRepository.save(new User(
+                userRequestDTO.getName(),
+                userRequestDTO.getSurname(),
+                userRequestDTO.getCpf(),
+                userRequestDTO.getPhone(),
+                userRequestDTO.getEmail(),
+                this.passwordEncoder.encode(userRequestDTO.getPassword()),
                 UserRole.CLIENTE
-        );
+        ));
 
-        user = userRepository.save(user);
         var userActivationCode = new UserActivationCode(user, this.generateActivationCode());
         this.userActivationCodeRepository.save(userActivationCode);
 
         //TODO: PRECISO CRIAR A ROTINA DE ENVIAR EMAIL E COLOCAR NESTE TRECHO
 
-        var userDTO = new UserDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }

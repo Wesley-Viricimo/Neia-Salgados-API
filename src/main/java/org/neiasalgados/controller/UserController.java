@@ -1,9 +1,9 @@
 package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
-import org.neiasalgados.domain.dto.ResponseDataDTO;
-import org.neiasalgados.domain.dto.UserDTO;
-import org.neiasalgados.domain.vo.UserVO;
+import org.neiasalgados.domain.dto.response.ResponseDataDTO;
+import org.neiasalgados.domain.dto.response.UserResponseDTO;
+import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.services.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,8 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseDataDTO<UserDTO>> create(@Valid @RequestBody UserVO userVO) {
-        ResponseDataDTO<UserDTO> response = userService.createUser(userVO);
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> create(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userService.createUser(userRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

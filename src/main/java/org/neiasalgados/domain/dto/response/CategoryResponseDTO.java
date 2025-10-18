@@ -1,8 +1,8 @@
-package org.neiasalgados.domain.dto;
+package org.neiasalgados.domain.dto.response;
 
 import java.io.Serializable;
 
-public class CategoryDTO implements Serializable {
+public class CategoryResponseDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -10,9 +10,9 @@ public class CategoryDTO implements Serializable {
 
     private String description;
 
-    public CategoryDTO() { }
+    public CategoryResponseDTO() { }
 
-    public CategoryDTO(Long idCategory, String description) {
+    public CategoryResponseDTO(Long idCategory, String description) {
         this.idCategory = idCategory;
         this.description = description;
     }

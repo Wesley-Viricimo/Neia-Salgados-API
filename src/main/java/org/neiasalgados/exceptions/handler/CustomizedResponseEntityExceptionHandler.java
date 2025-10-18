@@ -1,7 +1,6 @@
 package org.neiasalgados.exceptions.handler;
 
-import jakarta.validation.ValidationException;
-import org.neiasalgados.domain.dto.MessageResponseDTO;
+import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
