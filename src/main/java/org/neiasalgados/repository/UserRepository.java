@@ -11,4 +11,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM T_USER u WHERE u.email = :email OR u.phone = :phone OR u.cpf = :cpf")
     List<User> findByEmailOrPhoneOrCpf(String email, String phone, String cpf);
 
+    Optional<User> findByEmail(String email);
 }

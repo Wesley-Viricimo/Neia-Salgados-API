@@ -6,6 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -25,22 +27,43 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     @ExceptionHandler(DataIntegrityViolationException.class)
     public final ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(Exception ex, WebRequest request) {
         var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
-        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public final ResponseEntity<ExceptionResponse> handleNotFoundException(Exception ex, WebRequest request) {
         var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
-        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(DuplicateFieldsException.class)
     public final ResponseEntity<ExceptionResponse> handleDuplicateFieldsException(DuplicateFieldsException ex) {
-        var messageResponse = new MessageResponseDTO("error", "Erro de validação", ex.getDuplicateFields());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
+        var messageResponse = new MessageResponseDTO("error", "Erro", ex.getDuplicateFields());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserInactiveException.class)
+    public final ResponseEntity<ExceptionResponse> handleUserInactiveException(UserInactiveException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.FORBIDDEN.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public final ResponseEntity<ExceptionResponse> handleUsernameNotFoundException(UsernameNotFoundException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public final ResponseEntity<ExceptionResponse> handleInvalidCredentialsException(BadCredentialsException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.UNAUTHORIZED.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.UNAUTHORIZED);
     }
 
     @Override
@@ -51,8 +74,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
                 .map(ObjectError::getDefaultMessage)
                 .collect(Collectors.toList());
 
-        var messageResponse = new MessageResponseDTO("error", "Erro de Validação", errorDetails);
-        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
+        var messageResponse = new MessageResponseDTO("error", "Erro", errorDetails);
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
