@@ -36,9 +36,9 @@ public class CategoryController {
             @RequestParam(value = "direction", defaultValue = "asc") String direction,
             @RequestParam(value = "description", required = false) String description
     ) {
-        var direcao = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable paginacao = PageRequest.of(page, size, Sort.by(direcao, "description"));
-        return ResponseEntity.ok(categoryService.findAll(description, paginacao));
+        var dir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, "description"));
+        return ResponseEntity.ok(categoryService.findAll(description, pageable));
     }
 
     @PutMapping(value = "/{idCategory}")

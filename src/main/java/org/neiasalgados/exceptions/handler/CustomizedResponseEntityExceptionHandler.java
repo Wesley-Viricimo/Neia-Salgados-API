@@ -2,10 +2,7 @@ package org.neiasalgados.exceptions.handler;
 
 import jakarta.validation.ValidationException;
 import org.neiasalgados.domain.dto.MessageResponseDTO;
-import org.neiasalgados.exceptions.DataIntegrityViolationException;
-import org.neiasalgados.exceptions.ExceptionResponse;
-import org.neiasalgados.exceptions.NotFoundException;
-import org.neiasalgados.exceptions.ValidationFieldsException;
+import org.neiasalgados.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -38,6 +35,13 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
         ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateFieldsException.class)
+    public final ResponseEntity<ExceptionResponse> handleDuplicateFieldsException(DuplicateFieldsException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro de validação", ex.getDuplicateFields());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, 400, LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
     @Override

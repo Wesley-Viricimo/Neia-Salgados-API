@@ -1,0 +1,30 @@
+package org.neiasalgados.controller;
+
+import jakarta.validation.Valid;
+import org.neiasalgados.domain.dto.ResponseDataDTO;
+import org.neiasalgados.domain.dto.UserDTO;
+import org.neiasalgados.domain.vo.UserVO;
+import org.neiasalgados.services.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/neiasalgados/api/v1/user")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseDataDTO<UserDTO>> create(@Valid @RequestBody UserVO userVO) {
+        ResponseDataDTO<UserDTO> response = userService.createUser(userVO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
