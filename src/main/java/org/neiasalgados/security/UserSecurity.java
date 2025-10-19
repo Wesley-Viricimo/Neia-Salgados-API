@@ -25,6 +25,14 @@ public class UserSecurity implements UserDetails, Serializable {
         this.isActive = user.isActive();
     }
 
+    public UserSecurity( Long id, String email, String role, boolean isActive) {
+        this.id = id;
+        this.email = email;
+        this.role = role;
+        this.isActive = isActive;
+        this.password = null;
+    }
+
     public Long getId() {
         return id;
     }
@@ -42,6 +50,10 @@ public class UserSecurity implements UserDetails, Serializable {
     @Override
     public String getUsername() {
         return this.email;
+    }
+
+    public boolean getIsActive() {
+        return this.isActive;
     }
 
     @Override
