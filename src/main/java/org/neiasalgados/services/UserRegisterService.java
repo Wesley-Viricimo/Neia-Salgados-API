@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class UserService {
+public class UserRegisterService {
 
     private final UserRepository userRepository;
     private final UserActivationCodeRepository userActivationCodeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserActivationCodeRepository userActivationCodeRepository) {
+    public UserRegisterService(UserRepository userRepository, UserActivationCodeRepository userActivationCodeRepository) {
         this.userRepository = userRepository;
         this.userActivationCodeRepository = userActivationCodeRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();

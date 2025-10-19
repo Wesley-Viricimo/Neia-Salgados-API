@@ -7,7 +7,7 @@ import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.User;
 import org.neiasalgados.exceptions.UserInactiveException;
 import org.neiasalgados.repository.UserRepository;
-import org.neiasalgados.security.JwtService;
+import org.neiasalgados.security.JwtTokenProvider;
 import org.neiasalgados.security.UserSecurity;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -22,12 +22,12 @@ import java.util.List;
 @Service
 public class AuthService implements UserDetailsService {
     private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService, @Lazy AuthenticationManager authenticationManager) {
+    public AuthService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, @Lazy AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
-        this.jwtService = jwtService;
+        this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
     }
 
@@ -48,7 +48,7 @@ public class AuthService implements UserDetailsService {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
         var auth = authenticationManager.authenticate(usernamePassword);
         var userSecurity = (UserSecurity) auth.getPrincipal();
-        var token = jwtService.generateToken(userSecurity);
+        var token = jwtTokenProvider.createToken(userSecurity);
 
         var authResponse = new AuthResponseDTO(token);
         var message = new MessageResponseDTO("success", "Sucesso", List.of("Autenticação realizada com sucesso"));

@@ -38,7 +38,6 @@ public class CategoryService {
         this.categoryRepository.save(categoryEntity);
 
         var categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
-
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
@@ -60,10 +59,9 @@ public class CategoryService {
 
     @Transactional
     public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryRequestDTO categoryRequestDTO, Long idCategory) {
-        Optional<Category> category = categoryRepository.findById(idCategory);
-
-        if (category.isEmpty())
-            throw new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory));
+        var category = categoryRepository.findById(idCategory).orElseThrow(() ->
+                new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory))
+        );
 
         String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
         Optional<Category> existingCategory = categoryRepository.findByDescription(upperDescription);
@@ -71,11 +69,10 @@ public class CategoryService {
         if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(idCategory))
             throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
 
-        Category updatedCategory = category.get();
-        updatedCategory.setDescription(upperDescription);
-        categoryRepository.save(updatedCategory);
+        category.setDescription(upperDescription);
+        categoryRepository.save(category);
 
-        var categoryDTO = new CategoryResponseDTO(updatedCategory.getIdCategory(), updatedCategory.getDescription());
+        var categoryDTO = new CategoryResponseDTO(category.getIdCategory(), category.getDescription());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
@@ -83,10 +80,8 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long idCategory) {
-        Optional<Category> category = categoryRepository.findById(idCategory);
-
-        if (category.isEmpty())
-            throw new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory));
+        categoryRepository.findById(idCategory)
+                .orElseThrow(() -> new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory)));
 
         categoryRepository.deleteById(idCategory);
     }
