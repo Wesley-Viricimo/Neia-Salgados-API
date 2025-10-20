@@ -1,4 +1,4 @@
-package org.neiasalgados.security;
+package org.neiasalgados.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

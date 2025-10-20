@@ -1,6 +1,6 @@
 package org.neiasalgados.config;
 
-import org.neiasalgados.security.JwtAuthenticationEntryPoint;
+import org.neiasalgados.security.jwt.JwtAuthenticationEntryPoint;
 import org.neiasalgados.security.filter.JwtTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -7,7 +7,7 @@ import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.User;
 import org.neiasalgados.exceptions.UserInactiveException;
 import org.neiasalgados.repository.UserRepository;
-import org.neiasalgados.security.JwtTokenProvider;
+import org.neiasalgados.security.jwt.JwtTokenProvider;
 import org.neiasalgados.security.UserSecurity;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
