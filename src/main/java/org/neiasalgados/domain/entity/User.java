@@ -1,7 +1,10 @@
 package org.neiasalgados.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.validator.constraints.br.CPF;
 import org.neiasalgados.domain.enums.UserRole;
 
@@ -52,22 +55,34 @@ public class User implements Serializable {
     @Column(name = "UPDATED_AT", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private UserNotificationToken notificationToken;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Address> addresses;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Order> orders;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Auditing> auditings;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<NotificationRead> notificationsRead;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @JsonIgnoreProperties("user")
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private UserActivationCode activationCode;
 
     public User() {}
@@ -91,10 +106,6 @@ public class User implements Serializable {
 
     public Long getIdUser() {
         return idUser;
-    }
-
-    public void setIdUser(Long idUser) {
-        this.idUser = idUser;
     }
 
     public String getName() {
@@ -131,10 +142,6 @@ public class User implements Serializable {
 
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPassword() {

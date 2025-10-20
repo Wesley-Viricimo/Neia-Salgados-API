@@ -1,5 +1,7 @@
 package org.neiasalgados.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -19,7 +21,9 @@ public class Category implements Serializable {
     @Column(name = "DESCRIPTION", length = 100, nullable = false, unique = true)
     private String description;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Product> products;
 
     @Column(name = "CREATED_AT", nullable = false)

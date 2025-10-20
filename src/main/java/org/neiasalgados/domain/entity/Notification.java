@@ -1,5 +1,7 @@
 package org.neiasalgados.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.neiasalgados.domain.enums.NotificationType;
 
@@ -33,7 +35,9 @@ public class Notification implements Serializable {
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @JsonIgnoreProperties("notification")
+    @OneToMany(mappedBy = "notification", fetch = FetchType.LAZY)
     private List<NotificationRead> notificationReads;
 
     public Notification() {}
