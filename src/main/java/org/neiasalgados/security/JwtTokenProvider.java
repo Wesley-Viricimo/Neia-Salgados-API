@@ -18,6 +18,8 @@ public class JwtTokenProvider {
     @Value("${api.security.token.secret}")
     private String secretKey;
     private SecretKey key;
+    @Value("${api.security.token.expiration}")
+    private Long expiration;
 
     @PostConstruct
     protected void init() {
@@ -26,7 +28,7 @@ public class JwtTokenProvider {
 
     public String createToken(UserSecurity userSecurity) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000);
+        Date validity = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(userSecurity.getUsername())
