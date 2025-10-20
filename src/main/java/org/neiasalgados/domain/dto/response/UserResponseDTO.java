@@ -16,7 +16,7 @@ public class UserResponseDTO {
     public UserResponseDTO(String name, String surname, String cpf, String phone, String email) {
         this.name = name;
         this.surname = surname;
-        this.cpf = cpf;
+        this.cpf = maskCpf(cpf);
         this.phone = phone;
         this.email = email;
     }
@@ -39,5 +39,14 @@ public class UserResponseDTO {
 
     public String getEmail() {
         return email;
+    }
+
+    private String maskCpf(String cpf) {
+        if (cpf == null || cpf.length() != 11) {
+            return cpf;
+        }
+        return String.format("***.%s.***-%s",
+                cpf.substring(3, 6),
+                cpf.substring(9));
     }
 }

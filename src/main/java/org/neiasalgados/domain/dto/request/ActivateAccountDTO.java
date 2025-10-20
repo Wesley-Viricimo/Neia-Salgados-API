@@ -4,27 +4,27 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serializable;
 
-public class AuthRequestDTO implements Serializable {
+public class ActivateAccountDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "O campo 'email' não pode ser vazio")
     private String email;
 
-    @NotBlank(message = "O campo 'password' não pode ser vazio")
-    private String password;
+    @NotBlank(message = "O campo 'code' não pode ser vazio")
+    private String code;
 
-    public AuthRequestDTO() { }
+    public ActivateAccountDTO() { }
 
-    public AuthRequestDTO(String email, String password) {
+    public ActivateAccountDTO(String email, String code) {
         this.email = email;
-        this.password = password;
+        this.code = code;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getPassword() {
-        return password;
+    public String getCode() {
+        return code;
     }
 }

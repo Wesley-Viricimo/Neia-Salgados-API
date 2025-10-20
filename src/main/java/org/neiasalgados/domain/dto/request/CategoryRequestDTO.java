@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 public class CategoryRequestDTO implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "O campo 'description' não pode ser vazio")

@@ -4,7 +4,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.br.CPF;
 
-public class UserRequestDTO {
+import java.io.Serializable;
+
+public class UserRequestDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @NotBlank(message = "O campo 'name' não pode ser vazio")
     private String name;
 
