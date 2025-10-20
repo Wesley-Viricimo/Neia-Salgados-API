@@ -1,6 +1,5 @@
 package org.neiasalgados.exceptions.handler;
 
-import io.jsonwebtoken.MalformedJwtException;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.exceptions.*;
 import org.springframework.http.HttpHeaders;
@@ -66,6 +65,13 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         var messageResponse = new MessageResponseDTO("error", "Erro", List.of("Usuário ou senha inválidos"));
         ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.UNAUTHORIZED.value(), LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public final ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.FORBIDDEN.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.FORBIDDEN);
     }
 
     @Override

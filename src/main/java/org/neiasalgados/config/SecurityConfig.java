@@ -52,7 +52,12 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            throw accessDeniedException;
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/neiasalgados/api/v1/auth/**").permitAll()
                         .requestMatchers("/neiasalgados/api/v1/user-register/**").permitAll()
