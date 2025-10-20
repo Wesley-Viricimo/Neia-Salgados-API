@@ -1,11 +1,13 @@
 package org.neiasalgados.exceptions.handler;
 
+import io.jsonwebtoken.MalformedJwtException;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.ObjectError;
@@ -60,8 +62,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public final ResponseEntity<ExceptionResponse> handleInvalidCredentialsException(BadCredentialsException ex) {
-        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+    public final ResponseEntity<ExceptionResponse> handleInvalidCredentialsException() {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of("Usuário ou senha inválidos"));
         ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.UNAUTHORIZED.value(), LocalDateTime.now());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.UNAUTHORIZED);
     }
