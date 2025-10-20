@@ -1,6 +1,7 @@
 package org.neiasalgados.services;
 
 import jakarta.transaction.Transactional;
+import org.neiasalgados.domain.dto.request.ActivateAccountDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
@@ -13,14 +14,16 @@ import org.neiasalgados.exceptions.DuplicateFieldsException;
 import org.neiasalgados.repository.UserActivationCodeRepository;
 import org.neiasalgados.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserRegisterService {
-
     private final UserRepository userRepository;
     private final UserActivationCodeRepository userActivationCodeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -76,6 +79,28 @@ public class UserRegisterService {
 
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> activateAccount(ActivateAccountDTO activateAccountDTO) {
+        var user = userRepository.findByEmail(activateAccountDTO.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
+
+        if (user.isActive())
+            throw new DataIntegrityViolationException("Usuário já está ativo no sistema");
+
+        var activationCode = userActivationCodeRepository.findByUserAndCode(user, activateAccountDTO.getCode().toUpperCase())
+                .orElseThrow(() -> new DataIntegrityViolationException("Código de ativação inválido"));
+
+        user.setActive(true);
+        user.setUpdatedAt(LocalDateTime.now());
+        activationCode.setConfirmed(true);
+        userActivationCodeRepository.save(activationCode);
+        userRepository.save(user);
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário ativo com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
