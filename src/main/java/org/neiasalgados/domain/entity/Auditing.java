@@ -34,8 +34,9 @@ public class Auditing implements Serializable {
 
     public Auditing() {}
 
-    public Auditing(User user, ChangeType changeType, String operation, String description) {
-        this.user = user;
+    public Auditing(Long userId, ChangeType changeType, String operation, String description) {
+        this.user = new User();
+        this.user.setIdUser(userId);
         this.changeType = changeType;
         this.operation = operation;
         this.description = description;

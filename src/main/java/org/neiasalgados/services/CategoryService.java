@@ -1,15 +1,19 @@
 package org.neiasalgados.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import org.neiasalgados.domain.dto.ActionAuditingDTO;
 import org.neiasalgados.domain.dto.response.CategoryResponseDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Category;
 import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
+import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.repository.CategoryRepository;
+import org.neiasalgados.security.AuthenticationFacade;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -22,9 +26,15 @@ import java.util.Optional;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final AuditingService auditingService;
+    private final AuthenticationFacade authenticationFacade;
+    private final ObjectMapper objectMapper;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, AuditingService auditingService, AuthenticationFacade authenticationFacade, ObjectMapper objectMapper) {
         this.categoryRepository = categoryRepository;
+        this.auditingService = auditingService;
+        this.authenticationFacade = authenticationFacade;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -36,6 +46,23 @@ public class CategoryService {
 
         var categoryEntity = new Category(upperDescription);
         this.categoryRepository.save(categoryEntity);
+
+        try {
+            String categoryJson = objectMapper.writeValueAsString(categoryEntity);
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    authenticationFacade.getAuthenticatedUserId(),
+                    "CADASTRO DE CATEGORIA",
+                    "CATEGORIA",
+                    categoryEntity.getIdCategory(),
+                    null,
+                    categoryJson,
+                    ChangeType.CREATE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
 
         var categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));

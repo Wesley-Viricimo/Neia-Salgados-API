@@ -108,6 +108,10 @@ public class User implements Serializable {
         return idUser;
     }
 
+    public void setIdUser(Long idUser) {
+        this.idUser = idUser;
+    }
+
     public String getName() {
         return name;
     }
