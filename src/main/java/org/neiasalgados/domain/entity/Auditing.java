@@ -26,7 +26,7 @@ public class Auditing implements Serializable {
     @Column(name = "OPERATION", nullable = false)
     private String operation;
 
-    @Column(name = "DESCRIPTION", nullable = false)
+    @Column(name = "DESCRIPTION", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "CREATED_AT", nullable = false)

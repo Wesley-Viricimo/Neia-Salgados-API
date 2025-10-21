@@ -26,7 +26,9 @@ public class AuditingService {
                     objectMapper.readTree(actionAuditingDTO.getPreviousValue()) :
                     objectMapper.createObjectNode();
 
-            Object newValueObj = objectMapper.readTree(actionAuditingDTO.getNewValue());
+            Object newValueObj = actionAuditingDTO.getNewValue() != null ?
+                    objectMapper.readTree(actionAuditingDTO.getNewValue()) :
+                    objectMapper.createObjectNode();
 
             DescriptionAuditingDTO descriptionAuditingDTO = new DescriptionAuditingDTO(
                     actionAuditingDTO.getAction(),
