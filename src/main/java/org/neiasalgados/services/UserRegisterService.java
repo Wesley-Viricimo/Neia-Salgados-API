@@ -80,7 +80,7 @@ public class UserRegisterService {
 
         this.sendActivationEmail(user.getEmail(), userActivationCode.getCode(), user.getSurname());
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -105,7 +105,7 @@ public class UserRegisterService {
         userActivationCodeRepository.save(activationCode);
         userRepository.save(user);
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário ativo com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -132,7 +132,7 @@ public class UserRegisterService {
 
         this.sendActivationEmail(user.getEmail(), activationCode.getCode(), user.getSurname());
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Código de ativação reenviado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }

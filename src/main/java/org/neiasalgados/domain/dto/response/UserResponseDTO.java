@@ -11,14 +11,17 @@ public class UserResponseDTO {
 
     private String email;
 
+    private boolean isActive;
+
     public UserResponseDTO() {}
 
-    public UserResponseDTO(String name, String surname, String cpf, String phone, String email) {
+    public UserResponseDTO(String name, String surname, String cpf, String phone, String email, boolean isActive) {
         this.name = name;
         this.surname = surname;
         this.cpf = maskCpf(cpf);
         this.phone = phone;
         this.email = email;
+        this.isActive = isActive;
     }
 
     public String getName() {
@@ -39,6 +42,10 @@ public class UserResponseDTO {
 
     public String getEmail() {
         return email;
+    }
+
+    public boolean isActive() {
+        return isActive;
     }
 
     private String maskCpf(String cpf) {
