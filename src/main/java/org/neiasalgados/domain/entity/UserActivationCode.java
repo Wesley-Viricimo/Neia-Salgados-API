@@ -47,4 +47,12 @@ public class UserActivationCode implements Serializable {
     public String getCode() {
         return code;
     }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

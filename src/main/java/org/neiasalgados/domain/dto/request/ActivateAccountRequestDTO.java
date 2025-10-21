@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serializable;
 
-public class ActivateAccountDTO implements Serializable {
+public class ActivateAccountRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "O campo 'email' não pode ser vazio")
@@ -13,9 +13,9 @@ public class ActivateAccountDTO implements Serializable {
     @NotBlank(message = "O campo 'code' não pode ser vazio")
     private String code;
 
-    public ActivateAccountDTO() { }
+    public ActivateAccountRequestDTO() { }
 
-    public ActivateAccountDTO(String email, String code) {
+    public ActivateAccountRequestDTO(String email, String code) {
         this.email = email;
         this.code = code;
     }

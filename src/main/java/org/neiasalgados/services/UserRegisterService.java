@@ -1,7 +1,8 @@
 package org.neiasalgados.services;
 
 import jakarta.transaction.Transactional;
-import org.neiasalgados.domain.dto.request.ActivateAccountDTO;
+import org.neiasalgados.domain.dto.request.ActivateAccountRequestDTO;
+import org.neiasalgados.domain.dto.request.ResendActivationCodeRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
@@ -85,24 +86,54 @@ public class UserRegisterService {
     }
 
     @Transactional
-    public ResponseDataDTO<UserResponseDTO> activateAccount(ActivateAccountDTO activateAccountDTO) {
-        var user = userRepository.findByEmail(activateAccountDTO.getEmail())
+    public ResponseDataDTO<UserResponseDTO> activateAccount(ActivateAccountRequestDTO activateAccountRequestDTO) {
+        var user = userRepository.findByEmail(activateAccountRequestDTO.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
 
         if (user.isActive())
             throw new DataIntegrityViolationException("Usuário já está ativo no sistema");
 
-        var activationCode = userActivationCodeRepository.findByUserAndCode(user, activateAccountDTO.getCode().toUpperCase())
+        var activationCode = userActivationCodeRepository.findByUserAndCode(user, activateAccountRequestDTO.getCode().toUpperCase())
                 .orElseThrow(() -> new DataIntegrityViolationException("Código de ativação inválido"));
 
+        LocalDateTime currentTime = LocalDateTime.now();
+
         user.setActive(true);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(currentTime);
         activationCode.setConfirmed(true);
+        activationCode.setUpdatedAt(currentTime);
         userActivationCodeRepository.save(activationCode);
         userRepository.save(user);
 
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário ativo com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> resendActivationCode(ResendActivationCodeRequestDTO resendActivationCodeRequestDTO) {
+        var user = userRepository.findByEmail(resendActivationCodeRequestDTO.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
+
+        if (user.isActive())
+            throw new DataIntegrityViolationException(String.format("Usuário email '%s' já está ativo no sistema, não é necessário reenviar o email para ativação da conta", resendActivationCodeRequestDTO.getEmail()));
+
+        var activationCode = userActivationCodeRepository.findByUser(user)
+                .orElseThrow(() ->  new DataIntegrityViolationException(String.format("Código de ativação não encontrado para o email '%s'", resendActivationCodeRequestDTO.getEmail())));
+
+        LocalDateTime currentTime = LocalDateTime.now();
+        LocalDateTime lastUpdate = activationCode.getUpdatedAt();
+
+        if (lastUpdate.plusMinutes(3).isAfter(currentTime))
+            throw new DataIntegrityViolationException("Código de ativação já foi reenviado recentemente. Por favor, aguarde 3 minutos antes de solicitar um novo código.");
+
+        activationCode.setUpdatedAt(currentTime);
+        userActivationCodeRepository.save(activationCode);
+
+        this.sendActivationEmail(user.getEmail(), activationCode.getCode(), user.getSurname());
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Código de ativação reenviado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 

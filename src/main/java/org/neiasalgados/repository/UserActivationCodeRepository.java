@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface UserActivationCodeRepository extends JpaRepository<UserActivationCode, Long> {
 
     Optional<UserActivationCode> findByUserAndCode(User user, String code);
+    Optional<UserActivationCode> findByUser(User user);
 }

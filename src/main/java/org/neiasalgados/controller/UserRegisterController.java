@@ -1,7 +1,8 @@
 package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
-import org.neiasalgados.domain.dto.request.ActivateAccountDTO;
+import org.neiasalgados.domain.dto.request.ActivateAccountRequestDTO;
+import org.neiasalgados.domain.dto.request.ResendActivationCodeRequestDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
 import org.neiasalgados.domain.dto.request.UserRequestDTO;
@@ -30,8 +31,14 @@ public class UserRegisterController {
     }
 
     @PostMapping("/activate-account")
-    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> activateAccount(@Valid @RequestBody ActivateAccountDTO activateAccountDTO) {
-        ResponseDataDTO<UserResponseDTO> response = userRegisterService.activateAccount(activateAccountDTO);
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> activateAccount(@Valid @RequestBody ActivateAccountRequestDTO activateAccountRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userRegisterService.activateAccount(activateAccountRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/resend-activation-code")
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> resendActivationCode(@Valid @RequestBody ResendActivationCodeRequestDTO resendActivationCodeRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userRegisterService.resendActivationCode(resendActivationCodeRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
