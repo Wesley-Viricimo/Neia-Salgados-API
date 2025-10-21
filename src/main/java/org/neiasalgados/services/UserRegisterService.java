@@ -26,11 +26,13 @@ import java.util.List;
 public class UserRegisterService {
     private final UserRepository userRepository;
     private final UserActivationCodeRepository userActivationCodeRepository;
+    private final EmailService emailService;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserRegisterService(UserRepository userRepository, UserActivationCodeRepository userActivationCodeRepository) {
+    public UserRegisterService(UserRepository userRepository, UserActivationCodeRepository userActivationCodeRepository, EmailService emailService) {
         this.userRepository = userRepository;
         this.userActivationCodeRepository = userActivationCodeRepository;
+        this.emailService = emailService;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -75,7 +77,7 @@ public class UserRegisterService {
         var userActivationCode = new UserActivationCode(user, this.generateActivationCode());
         this.userActivationCodeRepository.save(userActivationCode);
 
-        //TODO: PRECISO CRIAR A ROTINA DE ENVIAR EMAIL E COLOCAR NESTE TRECHO
+        this.sendActivationEmail(user.getEmail(), userActivationCode.getCode(), user.getSurname());
 
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
@@ -108,5 +110,80 @@ public class UserRegisterService {
         return Long.toString(Double.doubleToLongBits(Math.random()), 36)
                 .substring(0, 5)
                 .toUpperCase();
+    }
+
+    private void sendActivationEmail(String toEmail, String activationCode, String surname) {
+        String htmlMessage = "<html>" +
+                "<head>" +
+                "<style>" +
+                "body {" +
+                "    font-family: Arial, sans-serif;" +
+                "    background-color: #f4f4f9;" +
+                "    color: #333;" +
+                "    margin: 0;" +
+                "    padding: 0;" +
+                "}" +
+                ".email-container {" +
+                "    max-width: 600px;" +
+                "    margin: 20px auto;" +
+                "    background-color: #ffffff;" +
+                "    border-radius: 8px;" +
+                "    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);" +
+                "    overflow: hidden;" +
+                "    border: 1px solid #ddd;" +
+                "}" +
+                ".header {" +
+                "    background-color: #ff6f61;" +
+                "    color: white;" +
+                "    padding: 20px;" +
+                "    text-align: center;" +
+                "    font-size: 24px;" +
+                "    font-weight: bold;" +
+                "}" +
+                ".content {" +
+                "    padding: 20px;" +
+                "    text-align: left;" +
+                "    line-height: 1.6;" +
+                "}" +
+                ".content p {" +
+                "    margin: 15px 0;" +
+                "}" +
+                ".activation-code {" +
+                "    display: inline-block;" +
+                "    padding: 10px 15px;" +
+                "    margin: 20px 0;" +
+                "    font-size: 18px;" +
+                "    font-weight: bold;" +
+                "    color: white;" +
+                "    background-color: #ff6f61;" +
+                "    border-radius: 4px;" +
+                "    text-align: center;" +
+                "}" +
+                ".footer {" +
+                "    background-color: #f4f4f9;" +
+                "    color: #888;" +
+                "    text-align: center;" +
+                "    padding: 15px;" +
+                "    font-size: 14px;" +
+                "    border-top: 1px solid #ddd;" +
+                "}" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='email-container'>" +
+                "<div class='header'>Confirmação de Cadastro</div>" +
+                "<div class='content'>" +
+                "<p>Olá <strong>" + surname + "</strong>,</p>" +
+                "<p>Seu código de ativação é:</p>" +
+                "<div class='activation-code'>" + activationCode + "</div>" +
+                "<p>Use este código para ativar sua conta. Caso não tenha solicitado este cadastro, por favor ignore este e-mail.</p>" +
+                "<p>Atenciosamente,<br>Equipe Neia Salgados</p>" +
+                "</div>" +
+                "<div class='footer'>© 2024 Neia Salgados. Todos os direitos reservados.</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+
+        emailService.sendEmail(toEmail, "Confirmação de Cadastro", htmlMessage);
     }
 }

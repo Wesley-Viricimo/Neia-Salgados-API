@@ -43,4 +43,8 @@ public class UserActivationCode implements Serializable {
     public void setConfirmed(boolean confirmed) {
         this.confirmed = confirmed;
     }
+
+    public String getCode() {
+        return code;
+    }
 }
