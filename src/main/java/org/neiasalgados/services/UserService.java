@@ -23,10 +23,10 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public ResponseDataDTO<PageResponseDTO<UserResponseDTO>> findAll(String surname, Pageable pageable) {
-        Page<User> userPage = Optional.ofNullable(surname)
-                .filter(name -> !name.isEmpty())
-                .map(name -> userRepository.findBySurnameContaining(name, pageable))
+    public ResponseDataDTO<PageResponseDTO<UserResponseDTO>> findAll(String name, Pageable pageable) {
+        Page<User> userPage = Optional.ofNullable(name)
+                .filter(nm -> !nm.isEmpty())
+                .map(nm -> userRepository.findByNameContainingIgnoreCase(nm, pageable))
                 .orElseGet(() -> userRepository.findAll(pageable));
 
         Page<UserResponseDTO> userResponseDTOPage = userPage.map(user -> new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive()));

@@ -31,10 +31,10 @@ public class UserController {
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction,
-            @RequestParam(value = "surname", required = false) String surname
+            @RequestParam(value = "name", required = false) String name
     ) {
         var dir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, "surname"));
-        return ResponseEntity.ok(userService.findAll(surname, pageable));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, "name"));
+        return ResponseEntity.ok(userService.findAll(name, pageable));
     }
 }
