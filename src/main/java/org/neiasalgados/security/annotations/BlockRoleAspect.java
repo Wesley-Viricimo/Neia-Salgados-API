@@ -9,13 +9,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import java.util.Arrays;
 
 @Aspect
 @Component
-public class BlockClientRoleAspect {
+public class BlockRoleAspect {
 
-    @Around("@annotation(BlockClientRole)")
-    public Object checkRole(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("@annotation(blockRole)")
+    public Object checkRole(ProceedingJoinPoint joinPoint, BlockRole blockRole) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || authentication.getPrincipal() == null) {
@@ -23,8 +24,16 @@ public class BlockClientRoleAspect {
         }
 
         UserSecurity userSecurity = (UserSecurity) authentication.getPrincipal();
-        if (UserRole.CLIENTE.name().equals(userSecurity.getAuthorities().iterator().next().getAuthority().replace("ROLE_", ""))) {
-            throw new AccessDeniedException("Acesso restrito. Este recurso está disponível apenas para usuários administrativos.");
+        String userRole = userSecurity.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+
+        UserRole[] allowedRoles = blockRole.allowedRoles();
+        if (allowedRoles.length > 0) {
+            boolean hasPermission = Arrays.stream(allowedRoles)
+                    .anyMatch(role -> role.name().equals(userRole));
+
+            if (!hasPermission) {
+                throw new AccessDeniedException("Acesso negado. Você não tem permissão para acessar este recurso.");
+            }
         }
 
         return joinPoint.proceed();

@@ -3,7 +3,8 @@ package org.neiasalgados.controller;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
-import org.neiasalgados.security.annotations.BlockClientRole;
+import org.neiasalgados.domain.enums.UserRole;
+import org.neiasalgados.security.annotations.BlockRole;
 import org.neiasalgados.services.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @BlockClientRole
+    @BlockRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
     @GetMapping
     public ResponseEntity<ResponseDataDTO<PageResponseDTO<UserResponseDTO>>> findAll(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
