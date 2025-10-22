@@ -13,10 +13,10 @@ import java.util.Arrays;
 
 @Aspect
 @Component
-public class BlockRoleAspect {
+public class AllowRoleAspect {
 
-    @Around("@annotation(blockRole)")
-    public Object checkRole(ProceedingJoinPoint joinPoint, BlockRole blockRole) throws Throwable {
+    @Around("@annotation(allowRole)")
+    public Object checkRole(ProceedingJoinPoint joinPoint, AllowRole allowRole) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || authentication.getPrincipal() == null) {
@@ -26,7 +26,7 @@ public class BlockRoleAspect {
         UserSecurity userSecurity = (UserSecurity) authentication.getPrincipal();
         String userRole = userSecurity.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
-        UserRole[] allowedRoles = blockRole.allowedRoles();
+        UserRole[] allowedRoles = allowRole.allowedRoles();
         if (allowedRoles.length > 0) {
             boolean hasPermission = Arrays.stream(allowedRoles)
                     .anyMatch(role -> role.name().equals(userRole));

@@ -6,7 +6,7 @@ import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
 import org.neiasalgados.domain.enums.UserRole;
-import org.neiasalgados.security.annotations.BlockRole;
+import org.neiasalgados.security.annotations.AllowRole;
 import org.neiasalgados.services.CategoryService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,21 +37,21 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.findAll(description, pageable));
     }
 
-    @BlockRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
     @PostMapping
     public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> create(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO) {
         ResponseDataDTO<CategoryResponseDTO> response = categoryService.createCategory(categoryRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @BlockRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
     @PutMapping(value = "/{idCategory}")
     public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> updateCategory(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO, @PathVariable(value = "idCategory") Long idCategory) {
         ResponseDataDTO<CategoryResponseDTO> response = categoryService.updateCategory(categoryRequestDTO, idCategory);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @BlockRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
     @DeleteMapping(value = "/{idCategory}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long idCategory) {
         categoryService.deleteCategory(idCategory);
