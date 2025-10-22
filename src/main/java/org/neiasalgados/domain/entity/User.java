@@ -104,6 +104,23 @@ public class User implements Serializable {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public User(String name, String surname, String cpf, String phone, String email, String password, UserRole role, boolean isActive) {
+        this.name = name;
+        this.surname = surname;
+        this.cpf = cpf;
+        this.phone = phone;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.isActive = isActive;
+        this.addresses = new ArrayList<>();
+        this.orders = new ArrayList<>();
+        this.auditings = new ArrayList<>();
+        this.notificationsRead = new ArrayList<>();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getIdUser() {
         return idUser;
     }

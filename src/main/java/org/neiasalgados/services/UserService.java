@@ -1,16 +1,31 @@
 package org.neiasalgados.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import org.neiasalgados.domain.dto.ActionAuditingDTO;
+import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
 import org.neiasalgados.domain.entity.User;
+import org.neiasalgados.domain.entity.UserActivationCode;
+import org.neiasalgados.domain.enums.ChangeType;
+import org.neiasalgados.domain.enums.UserRole;
+import org.neiasalgados.exceptions.DataIntegrityViolationException;
+import org.neiasalgados.exceptions.DuplicateFieldsException;
+import org.neiasalgados.repository.UserActivationCodeRepository;
 import org.neiasalgados.repository.UserRepository;
+import org.neiasalgados.security.AuthenticationFacade;
+import org.neiasalgados.utils.ActivationCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +33,19 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserActivationCodeRepository userActivationCodeRepository;
+    private final AuditingService auditingService;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final AuthenticationFacade authenticationFacade;
+    private final ObjectMapper objectMapper;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, UserActivationCodeRepository userActivationCodeRepository, AuditingService auditingService, AuthenticationFacade authenticationFacade, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
+        this.userActivationCodeRepository = userActivationCodeRepository;
+        this.auditingService = auditingService;
+        this.authenticationFacade = authenticationFacade;
+        this.objectMapper = objectMapper;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     public ResponseDataDTO<PageResponseDTO<UserResponseDTO>> findAll(String name, Pageable pageable) {
@@ -34,5 +59,93 @@ public class UserService {
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuários listados com sucesso"));
 
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> createAdmin(UserRequestDTO userRequestDTO) {
+        if (userRequestDTO.getRole() == null)
+            throw new DataIntegrityViolationException("O campo 'role' não pode ser vazio");
+
+        User userRequest = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário autenticado não encontrado"));
+
+        UserRole userRole = validateAndGetUserRole(userRequestDTO.getRole());
+
+        if (userRole == UserRole.DESENVOLVEDOR && userRequest.getRole() != UserRole.DESENVOLVEDOR)
+            throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem criar outros usuários com essa role");
+
+        List<User> existingUsers = userRepository.findByEmailOrPhoneOrCpf(
+                userRequestDTO.getEmail(),
+                userRequestDTO.getPhone(),
+                userRequestDTO.getCpf()
+        );
+
+        if (userRequestDTO.getPhone().length() > 11)
+            throw new DataIntegrityViolationException("Telefone deve conter no máximo 11 dígitos (DDD + Número)");
+
+        if (!existingUsers.isEmpty()) {
+            List<String> duplicateFields = new ArrayList<>();
+            existingUsers.forEach(user -> {
+                if (user.getEmail().equals(userRequestDTO.getEmail())) {
+                    duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userRequestDTO.getEmail()));
+                }
+                if (user.getPhone().equals(userRequestDTO.getPhone())) {
+                    duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userRequestDTO.getPhone()));
+                }
+                if (user.getCpf().equals(userRequestDTO.getCpf())) {
+                    duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userRequestDTO.getCpf()));
+                }
+            });
+
+            throw new DuplicateFieldsException(duplicateFields);
+        }
+
+        User user = userRepository.save(new User(
+                userRequestDTO.getName(),
+                userRequestDTO.getSurname(),
+                userRequestDTO.getCpf(),
+                userRequestDTO.getPhone(),
+                userRequestDTO.getEmail(),
+                this.passwordEncoder.encode(userRequestDTO.getPassword()),
+                userRole,
+                true
+        ));
+
+        var activationCode = new UserActivationCode(user, ActivationCode.generateActivationCode(), true);
+        this.userActivationCodeRepository.save(activationCode);
+
+        try {
+            String userJson = objectMapper.writeValueAsString(user);
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    authenticationFacade.getAuthenticatedUserId(),
+                    "CADASTRO DE USUARIO ADMINISTRADOR",
+                    "USUARIO",
+                    user.getIdUser(),
+                    null,
+                    userJson,
+                    ChangeType.CREATE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    private UserRole validateAndGetUserRole(String roleStr) {
+        String normalizedRole = roleStr.toUpperCase();
+        boolean isValidRole = Arrays.stream(UserRole.values())
+                .anyMatch(role -> role.name().equals(normalizedRole));
+
+        if (!isValidRole) {
+            throw new DataIntegrityViolationException("Role inválida. As roles permitidas são: " +
+                    Arrays.toString(UserRole.values()));
+        }
+
+        return UserRole.valueOf(normalizedRole);
     }
 }

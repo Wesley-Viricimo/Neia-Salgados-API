@@ -40,6 +40,14 @@ public class UserActivationCode implements Serializable {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public UserActivationCode(User user, String code, boolean confirmed) {
+        this.user = user;
+        this.code = code;
+        this.confirmed = confirmed;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void setConfirmed(boolean confirmed) {
         this.confirmed = confirmed;
     }

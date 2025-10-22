@@ -22,6 +22,8 @@ public class UserRequestDTO implements Serializable {
     @NotBlank(message = "O campo 'phone' não pode ser vazio")
     private String phone;
 
+    private String role;
+
     @Email
     @NotBlank(message = "O campo 'email' não pode ser vazio")
     private String email;
@@ -40,6 +42,16 @@ public class UserRequestDTO implements Serializable {
         this.password = password;
     }
 
+    public UserRequestDTO(String name, String surname, String cpf, String phone, String role, String email, String password) {
+        this.name = name;
+        this.surname = surname;
+        this.cpf = cpf;
+        this.phone = phone;
+        this.role = role;
+        this.email = email;
+        this.password = password;
+    }
+
     public String getName() {
         return name;
     }
@@ -54,6 +66,10 @@ public class UserRequestDTO implements Serializable {
 
     public String getPhone() {
         return phone;
+    }
+
+    public String getRole() {
+        return role;
     }
 
     public String getEmail() {

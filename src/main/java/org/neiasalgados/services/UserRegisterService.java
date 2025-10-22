@@ -14,6 +14,7 @@ import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.DuplicateFieldsException;
 import org.neiasalgados.repository.UserActivationCodeRepository;
 import org.neiasalgados.repository.UserRepository;
+import org.neiasalgados.utils.ActivationCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -75,7 +76,7 @@ public class UserRegisterService {
                 UserRole.CLIENTE
         ));
 
-        var userActivationCode = new UserActivationCode(user, this.generateActivationCode());
+        var userActivationCode = new UserActivationCode(user, ActivationCode.generateActivationCode());
         this.userActivationCodeRepository.save(userActivationCode);
 
         this.sendActivationEmail(user.getEmail(), userActivationCode.getCode(), user.getSurname());
@@ -135,12 +136,6 @@ public class UserRegisterService {
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Código de ativação reenviado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
-    }
-
-    private String generateActivationCode() {
-        return Long.toString(Double.doubleToLongBits(Math.random()), 36)
-                .substring(0, 5)
-                .toUpperCase();
     }
 
     private void sendActivationEmail(String toEmail, String activationCode, String surname) {
