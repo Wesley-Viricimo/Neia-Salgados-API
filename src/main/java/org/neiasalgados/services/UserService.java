@@ -3,6 +3,7 @@ package org.neiasalgados.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.neiasalgados.domain.dto.ActionAuditingDTO;
+import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
@@ -24,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,7 +56,7 @@ public class UserService {
                 .map(nm -> userRepository.findByNameContainingIgnoreCase(nm, pageable))
                 .orElseGet(() -> userRepository.findAll(pageable));
 
-        Page<UserResponseDTO> userResponseDTOPage = userPage.map(user -> new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive()));
+        Page<UserResponseDTO> userResponseDTOPage = userPage.map(user -> new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive()));
         var pageResponse = new PageResponseDTO<>(userResponseDTOPage);
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuários listados com sucesso"));
 
@@ -66,12 +68,12 @@ public class UserService {
         if (userRequestDTO.getRole() == null)
             throw new DataIntegrityViolationException("O campo 'role' não pode ser vazio");
 
-        User userRequest = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+        User userAdmin = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new DataIntegrityViolationException("Usuário autenticado não encontrado"));
 
         UserRole userRole = validateAndGetUserRole(userRequestDTO.getRole());
 
-        if (userRole == UserRole.DESENVOLVEDOR && userRequest.getRole() != UserRole.DESENVOLVEDOR)
+        if (userRole == UserRole.DESENVOLVEDOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
             throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem criar outros usuários com essa role");
 
         List<User> existingUsers = userRepository.findByEmailOrPhoneOrCpf(
@@ -117,7 +119,7 @@ public class UserService {
         try {
             String userJson = objectMapper.writeValueAsString(user);
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
-                    authenticationFacade.getAuthenticatedUserId(),
+                    userAdmin.getIdUser(),
                     "CADASTRO DE USUARIO ADMINISTRADOR",
                     "USUARIO",
                     user.getIdUser(),
@@ -131,8 +133,61 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.isActive());
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> updateUserRole(UpdateUserRoleRequestDTO updateUserRoleRequestDTO) {
+        var user = userRepository.findById(updateUserRoleRequestDTO.getUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário não encontrado"));
+
+        if (!user.isActive())
+            throw new DataIntegrityViolationException("Não é possível alterar a role de um usuário inativo");
+
+        User userAdmin = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário autenticado não encontrado"));
+
+        if (userAdmin.getIdUser().equals(updateUserRoleRequestDTO.getUserId()))
+            throw new DataIntegrityViolationException("Usuário não pode alterar sua própria role");
+
+        UserRole userRole = validateAndGetUserRole(updateUserRoleRequestDTO.getNewRole());
+
+        if (user.getRole() == UserRole.ADMINISTRADOR && userAdmin.getRole() == UserRole.ADMINISTRADOR && userRole != UserRole.ADMINISTRADOR)
+            throw new DataIntegrityViolationException("Não é permitido que usuários com a role 'ADMINISTRADOR' altere privilégios de outros usuários 'ADMINISTRADOR'");
+
+        if (userRole == UserRole.DESENVOLVEDOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
+            throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem criar outros usuários com essa role");
+
+        if (userRole == UserRole.ADMINISTRADOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
+            throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem atribuir a role 'ADMINISTRADOR'");
+
+        try {
+            String beforeChangeJson = objectMapper.writeValueAsString(user);
+
+            user.setRole(userRole);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            String afterChangeJson = objectMapper.writeValueAsString(user);
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    userAdmin.getIdUser(),
+                    "ALTERAÇÃO DE ROLE DE USUÁRIO",
+                    "USUARIO",
+                    user.getIdUser(),
+                    beforeChangeJson,
+                    afterChangeJson,
+                    ChangeType.UPDATE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 

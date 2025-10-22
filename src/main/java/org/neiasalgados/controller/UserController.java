@@ -1,6 +1,7 @@
 package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
+import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
@@ -43,5 +44,12 @@ public class UserController {
     public ResponseEntity<ResponseDataDTO<UserResponseDTO>> createAdmin(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         ResponseDataDTO<UserResponseDTO> response = userService.createAdmin(userRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR})
+    @PutMapping("/update-user-role")
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUserRole(@Valid @RequestBody UpdateUserRoleRequestDTO updateUserRoleRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userService.updateUserRole(updateUserRoleRequestDTO);
+        return ResponseEntity.ok(response);
     }
 }
