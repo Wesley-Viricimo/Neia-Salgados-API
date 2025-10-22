@@ -3,6 +3,7 @@ package org.neiasalgados.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.neiasalgados.domain.dto.ActionAuditingDTO;
+import org.neiasalgados.domain.dto.request.ChangeUserActivitieRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
@@ -158,7 +159,7 @@ public class UserService {
             throw new DataIntegrityViolationException("Não é permitido que usuários com a role 'ADMINISTRADOR' altere privilégios de outros usuários 'ADMINISTRADOR'");
 
         if (userRole == UserRole.DESENVOLVEDOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
-            throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem criar outros usuários com essa role");
+            throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem atribuir outros usuários com essa role");
 
         if (userRole == UserRole.ADMINISTRADOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
             throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem atribuir a role 'ADMINISTRADOR'");
@@ -187,7 +188,49 @@ public class UserService {
         }
 
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role atualizada com sucesso"));
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role do usuário atualizada com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> changeUserActivitie(ChangeUserActivitieRequestDTO changeUserActivitieRequestDTO) {
+        var user = userRepository.findById(changeUserActivitieRequestDTO.getUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário não encontrado"));
+
+        User userAdmin = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário autenticado não encontrado"));
+
+        if (userAdmin.getIdUser().equals(changeUserActivitieRequestDTO.getUserId()))
+            throw new DataIntegrityViolationException("Usuário não pode alterar sua própria atividade");
+
+        if ((user.getRole() == UserRole.ADMINISTRADOR || user.getRole() == UserRole.DESENVOLVEDOR) && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
+            throw new DataIntegrityViolationException("Somente usuários com a role 'DESENVOLVEDOR' podem alterar a atividade de usuários 'ADMINISTRADOR' ou 'DESENVOLVEDOR'");
+
+        try {
+            String beforeChangeJson = objectMapper.writeValueAsString(user);
+
+            user.setActive(changeUserActivitieRequestDTO.isActive());
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            String afterChangeJson = objectMapper.writeValueAsString(user);
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    userAdmin.getIdUser(),
+                    "ALTERAÇÃO DE ATIVIDADE DE USUÁRIO",
+                    "USUARIO",
+                    user.getIdUser(),
+                    beforeChangeJson,
+                    afterChangeJson,
+                    ChangeType.UPDATE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Atividade do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 

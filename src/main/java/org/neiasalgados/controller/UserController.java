@@ -1,6 +1,7 @@
 package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
+import org.neiasalgados.domain.dto.request.ChangeUserActivitieRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserRequestDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
@@ -50,6 +51,13 @@ public class UserController {
     @PutMapping("/update-user-role")
     public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUserRole(@Valid @RequestBody UpdateUserRoleRequestDTO updateUserRoleRequestDTO) {
         ResponseDataDTO<UserResponseDTO> response = userService.updateUserRole(updateUserRoleRequestDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR})
+    @PutMapping("/change-user-activitie")
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUserRole(@Valid @RequestBody ChangeUserActivitieRequestDTO changeUserActivitieRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userService.changeUserActivitie(changeUserActivitieRequestDTO);
         return ResponseEntity.ok(response);
     }
 }
