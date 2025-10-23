@@ -74,6 +74,13 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return new ResponseEntity<>(exceptionResponse, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(InvalidCepException.class)
+    public final ResponseEntity<ExceptionResponse> handleInvalidCepException(InvalidCepException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<String> errorDetails = ex.getBindingResult()

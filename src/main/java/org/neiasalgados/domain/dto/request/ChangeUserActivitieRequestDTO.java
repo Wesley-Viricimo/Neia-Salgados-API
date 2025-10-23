@@ -2,7 +2,10 @@ package org.neiasalgados.domain.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
-public class ChangeUserActivitieRequestDTO {
+import java.io.Serializable;
+
+public class ChangeUserActivitieRequestDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
     @NotNull(message = "O campo 'userId' não pode ser vazio")
     private Long userId;
     @NotNull(message = "O campo 'active' não pode ser vazio")
