@@ -18,7 +18,7 @@ public class Address implements Serializable {
     @JoinColumn(name = "ID_USER", nullable = false)
     private User user;
 
-    @Column(name = "CEP", length = 8, nullable = false)
+    @Column(name = "CEP", length = 9, nullable = false)
     private String cep;
 
     @Column(name = "STATE", length = 2, nullable = false)
