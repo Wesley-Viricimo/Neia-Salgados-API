@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.neiasalgados.domain.dto.request.ChangeUserActivitieRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserCreateRequestDTO;
+import org.neiasalgados.domain.dto.request.UserUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
@@ -51,13 +52,19 @@ public class UserController {
     @PutMapping("/update-user-role")
     public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUserRole(@Valid @RequestBody UpdateUserRoleRequestDTO updateUserRoleRequestDTO) {
         ResponseDataDTO<UserResponseDTO> response = userService.updateUserRole(updateUserRoleRequestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR})
     @PutMapping("/change-user-activitie")
     public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUserRole(@Valid @RequestBody ChangeUserActivitieRequestDTO changeUserActivitieRequestDTO) {
         ResponseDataDTO<UserResponseDTO> response = userService.changeUserActivitie(changeUserActivitieRequestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/update-user")
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> updateUser(@Valid @RequestBody UserUpdateRequestDTO userUpdateRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userService.updateUser(userUpdateRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

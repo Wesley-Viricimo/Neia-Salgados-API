@@ -6,6 +6,7 @@ import org.neiasalgados.domain.dto.ActionAuditingDTO;
 import org.neiasalgados.domain.dto.request.ChangeUserActivitieRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
 import org.neiasalgados.domain.dto.request.UserCreateRequestDTO;
+import org.neiasalgados.domain.dto.request.UserUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
@@ -232,6 +233,54 @@ public class UserService {
         var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
         var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Atividade do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<UserResponseDTO> updateUser(UserUpdateRequestDTO userUpdateRequestDTO) {
+        User user = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new DataIntegrityViolationException("Usuário autenticado não encontrado"));
+
+        List<String> duplicateFields = new ArrayList<>();
+
+        if (userUpdateRequestDTO.getEmail() != null && !userUpdateRequestDTO.getEmail().isEmpty())
+            userRepository.findByEmailAndIdUserNot(userUpdateRequestDTO.getEmail(), user.getIdUser())
+                    .ifPresent(u -> duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userUpdateRequestDTO.getEmail())));
+
+        if (userUpdateRequestDTO.getPhone() != null && !userUpdateRequestDTO.getPhone().isEmpty())
+            userRepository.findByPhoneAndIdUserNot(userUpdateRequestDTO.getPhone(), user.getIdUser())
+                    .ifPresent(u -> duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userUpdateRequestDTO.getPhone())));
+
+        if (userUpdateRequestDTO.getCpf() != null && !userUpdateRequestDTO.getCpf().isEmpty())
+            userRepository.findByCpfAndIdUserNot(userUpdateRequestDTO.getCpf(), user.getIdUser())
+                    .ifPresent(u -> duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userUpdateRequestDTO.getCpf())));
+
+        if (!duplicateFields.isEmpty())
+            throw new DuplicateFieldsException(duplicateFields);
+
+        if (userUpdateRequestDTO.getName() != null && !userUpdateRequestDTO.getName().isEmpty())
+            user.setName(userUpdateRequestDTO.getName());
+
+        if (userUpdateRequestDTO.getSurname() != null && !userUpdateRequestDTO.getSurname().isEmpty())
+            user.setSurname(userUpdateRequestDTO.getSurname());
+
+        if (userUpdateRequestDTO.getCpf() != null && !userUpdateRequestDTO.getCpf().isEmpty())
+            user.setCpf(userUpdateRequestDTO.getCpf());
+
+        if (userUpdateRequestDTO.getPhone() != null && !userUpdateRequestDTO.getPhone().isEmpty())
+            user.setPhone(userUpdateRequestDTO.getPhone());
+
+        if (userUpdateRequestDTO.getEmail() != null && !userUpdateRequestDTO.getEmail().isEmpty())
+            user.setEmail(userUpdateRequestDTO.getEmail());
+
+        if (userUpdateRequestDTO.getPassword() != null && !userUpdateRequestDTO.getPassword().isEmpty())
+            user.setPassword(passwordEncoder.encode(userUpdateRequestDTO.getPassword()));
+
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Dados do usuário atualizados com sucesso"));
+        return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.OK.value());
     }
 
     private UserRole validateAndGetUserRole(String roleStr) {
