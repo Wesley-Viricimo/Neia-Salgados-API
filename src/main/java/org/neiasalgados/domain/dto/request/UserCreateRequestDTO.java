@@ -6,7 +6,7 @@ import org.hibernate.validator.constraints.br.CPF;
 
 import java.io.Serializable;
 
-public class UserRequestDTO implements Serializable {
+public class UserCreateRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "O campo 'name' não pode ser vazio")
@@ -31,9 +31,9 @@ public class UserRequestDTO implements Serializable {
     @NotBlank(message = "O campo 'password' não pode ser vazio")
     private String password;
 
-    public UserRequestDTO() {}
+    public UserCreateRequestDTO() {}
 
-    public UserRequestDTO(String name, String surname, String cpf, String phone, String email, String password) {
+    public UserCreateRequestDTO(String name, String surname, String cpf, String phone, String email, String password) {
         this.name = name;
         this.surname = surname;
         this.cpf = cpf;
@@ -42,7 +42,7 @@ public class UserRequestDTO implements Serializable {
         this.password = password;
     }
 
-    public UserRequestDTO(String name, String surname, String cpf, String phone, String role, String email, String password) {
+    public UserCreateRequestDTO(String name, String surname, String cpf, String phone, String role, String email, String password) {
         this.name = name;
         this.surname = surname;
         this.cpf = cpf;

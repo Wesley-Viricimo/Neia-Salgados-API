@@ -5,7 +5,7 @@ import org.neiasalgados.domain.dto.request.ActivateAccountRequestDTO;
 import org.neiasalgados.domain.dto.request.ResendActivationCodeRequestDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
-import org.neiasalgados.domain.dto.request.UserRequestDTO;
+import org.neiasalgados.domain.dto.request.UserCreateRequestDTO;
 import org.neiasalgados.services.UserRegisterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +25,8 @@ public class UserRegisterController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> create(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        ResponseDataDTO<UserResponseDTO> response = userRegisterService.createUser(userRequestDTO);
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> create(@Valid @RequestBody UserCreateRequestDTO userCreateRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userRegisterService.createUser(userCreateRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

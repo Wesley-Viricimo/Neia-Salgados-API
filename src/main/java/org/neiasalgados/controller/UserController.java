@@ -3,7 +3,7 @@ package org.neiasalgados.controller;
 import jakarta.validation.Valid;
 import org.neiasalgados.domain.dto.request.ChangeUserActivitieRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateUserRoleRequestDTO;
-import org.neiasalgados.domain.dto.request.UserRequestDTO;
+import org.neiasalgados.domain.dto.request.UserCreateRequestDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.dto.response.UserResponseDTO;
@@ -42,8 +42,8 @@ public class UserController {
 
     @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR})
     @PostMapping("/create-admin")
-    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> createAdmin(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        ResponseDataDTO<UserResponseDTO> response = userService.createAdmin(userRequestDTO);
+    public ResponseEntity<ResponseDataDTO<UserResponseDTO>> createAdmin(@Valid @RequestBody UserCreateRequestDTO userCreateRequestDTO) {
+        ResponseDataDTO<UserResponseDTO> response = userService.createAdmin(userCreateRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

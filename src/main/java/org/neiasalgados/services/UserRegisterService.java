@@ -9,7 +9,7 @@ import org.neiasalgados.domain.dto.response.UserResponseDTO;
 import org.neiasalgados.domain.entity.User;
 import org.neiasalgados.domain.entity.UserActivationCode;
 import org.neiasalgados.domain.enums.UserRole;
-import org.neiasalgados.domain.dto.request.UserRequestDTO;
+import org.neiasalgados.domain.dto.request.UserCreateRequestDTO;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.DuplicateFieldsException;
 import org.neiasalgados.repository.UserActivationCodeRepository;
@@ -39,27 +39,27 @@ public class UserRegisterService {
     }
 
     @Transactional
-    public ResponseDataDTO<UserResponseDTO> createUser(UserRequestDTO userRequestDTO) {
+    public ResponseDataDTO<UserResponseDTO> createUser(UserCreateRequestDTO userCreateRequestDTO) {
         List<User> existingUsers = userRepository.findByEmailOrPhoneOrCpf(
-                userRequestDTO.getEmail(),
-                userRequestDTO.getPhone(),
-                userRequestDTO.getCpf()
+                userCreateRequestDTO.getEmail(),
+                userCreateRequestDTO.getPhone(),
+                userCreateRequestDTO.getCpf()
         );
 
-        if (userRequestDTO.getPhone().length() > 11)
+        if (userCreateRequestDTO.getPhone().length() > 11)
             throw new DataIntegrityViolationException("Telefone deve conter no máximo 11 dígitos (DDD + Número)");
 
         if (!existingUsers.isEmpty()) {
             List<String> duplicateFields = new ArrayList<>();
             existingUsers.forEach(user -> {
-                if (user.getEmail().equals(userRequestDTO.getEmail())) {
-                    duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userRequestDTO.getEmail()));
+                if (user.getEmail().equals(userCreateRequestDTO.getEmail())) {
+                    duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userCreateRequestDTO.getEmail()));
                 }
-                if (user.getPhone().equals(userRequestDTO.getPhone())) {
-                    duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userRequestDTO.getPhone()));
+                if (user.getPhone().equals(userCreateRequestDTO.getPhone())) {
+                    duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userCreateRequestDTO.getPhone()));
                 }
-                if (user.getCpf().equals(userRequestDTO.getCpf())) {
-                    duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userRequestDTO.getCpf()));
+                if (user.getCpf().equals(userCreateRequestDTO.getCpf())) {
+                    duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userCreateRequestDTO.getCpf()));
                 }
             });
 
@@ -67,12 +67,12 @@ public class UserRegisterService {
         }
 
         var user = userRepository.save(new User(
-                userRequestDTO.getName(),
-                userRequestDTO.getSurname(),
-                userRequestDTO.getCpf(),
-                userRequestDTO.getPhone(),
-                userRequestDTO.getEmail(),
-                this.passwordEncoder.encode(userRequestDTO.getPassword()),
+                userCreateRequestDTO.getName(),
+                userCreateRequestDTO.getSurname(),
+                userCreateRequestDTO.getCpf(),
+                userCreateRequestDTO.getPhone(),
+                userCreateRequestDTO.getEmail(),
+                this.passwordEncoder.encode(userCreateRequestDTO.getPassword()),
                 UserRole.CLIENTE
         ));
 
