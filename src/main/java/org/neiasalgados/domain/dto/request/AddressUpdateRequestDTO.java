@@ -1,35 +1,32 @@
 package org.neiasalgados.domain.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
-public class AddressRequestDTO implements Serializable {
+public class AddressUpdateRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "O campo 'cep' não pode ser vazio")
+    @NotNull(message = "O campo 'idAddress' não pode ser vazio")
+    private Long idAddress;
+
     private String cep;
 
-    @NotBlank(message = "O campo 'state' não pode ser vazio")
     private String state;
 
-    @NotBlank(message = "O campo 'city' não pode ser vazio")
     private String city;
 
-    @NotBlank(message = "O campo 'district' não pode ser vazio")
     private String district;
 
-    @NotBlank(message = "O campo 'road' não pode ser vazio")
     private String road;
 
-    @NotBlank(message = "O campo 'number' não pode ser vazio")
     private String number;
 
     private String complement;
 
-    public AddressRequestDTO() { }
+    public AddressUpdateRequestDTO() { }
 
-    public AddressRequestDTO(String cep, String state, String city, String district, String road, String number, String complement) {
+    public AddressUpdateRequestDTO(Long idAddress, String cep, String state, String city, String district, String road, String number, String complement) {
+        this.idAddress = idAddress;
         this.cep = cep;
         this.state = state;
         this.city = city;
@@ -37,6 +34,10 @@ public class AddressRequestDTO implements Serializable {
         this.road = road;
         this.number = number;
         this.complement = complement;
+    }
+
+    public Long getIdAddress() {
+        return idAddress;
     }
 
     public String getCep() {
