@@ -9,6 +9,7 @@ import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Category;
 import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
+import org.neiasalgados.domain.entity.Product;
 import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.exceptions.NotFoundException;
@@ -47,7 +48,7 @@ public class CategoryService {
         if (this.categoryRepository.findByDescription(upperDescription).isPresent())
             throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
 
-        var categoryEntity = new Category(upperDescription);
+        Category categoryEntity = new Category(upperDescription);
         this.categoryRepository.save(categoryEntity);
 
         try {
@@ -67,8 +68,8 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
+        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -81,15 +82,15 @@ public class CategoryService {
 
         Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(category -> new CategoryResponseDTO(category.getIdCategory(), category.getDescription()));
 
-        var pageResponse = new PageResponseDTO<>(categoryDTOPage);
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
+        PageResponseDTO<CategoryResponseDTO> pageResponse = new PageResponseDTO<>(categoryDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
 
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
     @Transactional
     public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryRequestDTO categoryRequestDTO, Long idCategory) {
-        var category = categoryRepository.findById(idCategory).orElseThrow(() ->
+        Category category = categoryRepository.findById(idCategory).orElseThrow(() ->
                 new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory))
         );
 
@@ -122,18 +123,18 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var categoryDTO = new CategoryResponseDTO(category.getIdCategory(), category.getDescription());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
+        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(category.getIdCategory(), category.getDescription());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
     @Transactional
     public void deleteCategory(Long idCategory) {
-        var category = categoryRepository.findById(idCategory)
+        Category category = categoryRepository.findById(idCategory)
                 .orElseThrow(() -> new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory)));
 
-        var products = productRepository.findByCategoryIdCategory(idCategory);
+        List<Product> products = productRepository.findByCategoryIdCategory(idCategory);
 
         if (!products.isEmpty())
             throw new DataIntegrityViolationException(String.format("Não é possível excluir a categoria '%s' pois existem produtos vinculados a ela", category.getDescription()));

@@ -59,8 +59,8 @@ public class UserService {
                 .orElseGet(() -> userRepository.findAll(pageable));
 
         Page<UserResponseDTO> userResponseDTOPage = userPage.map(user -> new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive()));
-        var pageResponse = new PageResponseDTO<>(userResponseDTOPage);
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuários listados com sucesso"));
+        PageResponseDTO<UserResponseDTO> pageResponse = new PageResponseDTO<>(userResponseDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuários listados com sucesso"));
 
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
@@ -115,7 +115,7 @@ public class UserService {
                 true
         ));
 
-        var activationCode = new UserActivationCode(user, ActivationCode.generateActivationCode(), true);
+        UserActivationCode activationCode = new UserActivationCode(user, ActivationCode.generateActivationCode(), true);
         this.userActivationCodeRepository.save(activationCode);
 
         try {
@@ -135,14 +135,14 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
+        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
     @Transactional
     public ResponseDataDTO<UserResponseDTO> updateUserRole(UpdateUserRoleRequestDTO updateUserRoleRequestDTO) {
-        var user = userRepository.findById(updateUserRoleRequestDTO.getUserId())
+        User user = userRepository.findById(updateUserRoleRequestDTO.getUserId())
                 .orElseThrow(() -> new DataIntegrityViolationException("Usuário não encontrado"));
 
         if (!user.isActive())
@@ -188,14 +188,14 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role do usuário atualizada com sucesso"));
+        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
     @Transactional
     public ResponseDataDTO<UserResponseDTO> changeUserActivitie(ChangeUserActivitieRequestDTO changeUserActivitieRequestDTO) {
-        var user = userRepository.findById(changeUserActivitieRequestDTO.getUserId())
+        User user = userRepository.findById(changeUserActivitieRequestDTO.getUserId())
                 .orElseThrow(() -> new DataIntegrityViolationException("Usuário não encontrado"));
 
         User userAdmin = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
@@ -230,8 +230,8 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Atividade do usuário atualizada com sucesso"));
+        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Atividade do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
@@ -278,8 +278,8 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        var userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
-        var messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Dados do usuário atualizados com sucesso"));
+        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Dados do usuário atualizados com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.OK.value());
     }
 

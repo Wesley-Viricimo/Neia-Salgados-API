@@ -38,7 +38,7 @@ public class AuditingService {
             );
 
             String description = objectMapper.writeValueAsString(descriptionAuditingDTO);
-            var auditing = new Auditing(
+            Auditing auditing = new Auditing(
                     actionAuditingDTO.getIdUser(),
                     actionAuditingDTO.getChangeType(),
                     actionAuditingDTO.getAction(),
