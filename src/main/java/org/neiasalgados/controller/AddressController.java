@@ -52,4 +52,10 @@ public class AddressController {
     public ResponseEntity<ResponseDataDTO<ViaCepResponseDTO>> findAddressByCep(@PathVariable(value = "cep") String cep) {
         return ResponseEntity.ok(addressService.findAddressByCep(cep));
     }
+
+    @DeleteMapping("/{idAddress}")
+    public ResponseEntity<?> deleteAddress(@PathVariable Long idAddress) {
+        addressService.deleteAddress(idAddress);
+        return ResponseEntity.noContent().build();
+    }
 }
