@@ -54,7 +54,7 @@ public class CategoryService {
         try {
             String categoryJson = objectMapper.writeValueAsString(categoryEntity);
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
-                    authenticationFacade.getAuthenticatedUserId(),
+                    this.authenticationFacade.getAuthenticatedUserId(),
                     "CADASTRO DE CATEGORIA",
                     "CATEGORIA",
                     categoryEntity.getIdCategory(),
@@ -77,8 +77,8 @@ public class CategoryService {
     public ResponseDataDTO<PageResponseDTO<CategoryResponseDTO>> findAll(String description, Pageable pageable) {
         Page<Category> categoryPage = Optional.ofNullable(description)
                 .filter(desc -> !desc.isEmpty())
-                .map(desc -> categoryRepository.findByDescriptionContaining(desc.toUpperCase(), pageable))
-                .orElseGet(() -> categoryRepository.findAll(pageable));
+                .map(desc -> this.categoryRepository.findByDescriptionContaining(desc.toUpperCase(), pageable))
+                .orElseGet(() -> this.categoryRepository.findAll(pageable));
 
         Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(category -> new CategoryResponseDTO(category.getIdCategory(), category.getDescription()));
 
@@ -90,12 +90,12 @@ public class CategoryService {
 
     @Transactional
     public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryRequestDTO categoryRequestDTO, Long idCategory) {
-        Category category = categoryRepository.findById(idCategory).orElseThrow(() ->
+        Category category = this.categoryRepository.findById(idCategory).orElseThrow(() ->
                 new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory))
         );
 
         String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
-        Optional<Category> existingCategory = categoryRepository.findByDescription(upperDescription);
+        Optional<Category> existingCategory = this.categoryRepository.findByDescription(upperDescription);
 
         if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(idCategory))
             throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
@@ -104,12 +104,12 @@ public class CategoryService {
             String previousJson = objectMapper.writeValueAsString(category);
 
             category.setDescription(upperDescription);
-            categoryRepository.save(category);
+            this.categoryRepository.save(category);
 
             String newJson = objectMapper.writeValueAsString(category);
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
-                    authenticationFacade.getAuthenticatedUserId(),
+                    this.authenticationFacade.getAuthenticatedUserId(),
                     "ATUALIZAÇÃO DE CATEGORIA",
                     "CATEGORIA",
                     category.getIdCategory(),
@@ -131,10 +131,10 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long idCategory) {
-        Category category = categoryRepository.findById(idCategory)
+        Category category = this.categoryRepository.findById(idCategory)
                 .orElseThrow(() -> new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory)));
 
-        List<Product> products = productRepository.findByCategoryIdCategory(idCategory);
+        List<Product> products = this.productRepository.findByCategoryIdCategory(idCategory);
 
         if (!products.isEmpty())
             throw new DataIntegrityViolationException(String.format("Não é possível excluir a categoria '%s' pois existem produtos vinculados a ela", category.getDescription()));
@@ -142,7 +142,7 @@ public class CategoryService {
         try {
             String categoryJson = objectMapper.writeValueAsString(category);
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
-                    authenticationFacade.getAuthenticatedUserId(),
+                    this.authenticationFacade.getAuthenticatedUserId(),
                     "EXCLUSÃO DE CATEGORIA",
                     "CATEGORIA",
                     category.getIdCategory(),
@@ -156,6 +156,6 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        categoryRepository.deleteById(idCategory);
+        this.categoryRepository.deleteById(idCategory);
     }
 }

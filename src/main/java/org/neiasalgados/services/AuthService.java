@@ -33,22 +33,22 @@ public class AuthService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
         return new UserSecurity(user);
     }
 
     public ResponseDataDTO<AuthResponseDTO> authenticate(AuthRequestDTO data) {
-        User user = userRepository.findByEmail(data.getEmail())
+        User user = this.userRepository.findByEmail(data.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
 
         if (!user.isActive())
             throw new UserInactiveException("Usuário não está ativo. Por favor, verifique seu e-mail para ativar sua conta.");
 
         UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
-        var auth = authenticationManager.authenticate(usernamePassword);
+        var auth = this.authenticationManager.authenticate(usernamePassword);
         var userSecurity = (UserSecurity) auth.getPrincipal();
-        var token = jwtTokenProvider.createToken(userSecurity);
+        var token = this.jwtTokenProvider.createToken(userSecurity);
 
         AuthResponseDTO authResponse = new AuthResponseDTO(token);
         MessageResponseDTO message = new MessageResponseDTO("success", "Sucesso", List.of("Autenticação realizada com sucesso"));

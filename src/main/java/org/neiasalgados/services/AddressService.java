@@ -38,7 +38,7 @@ public class AddressService {
 
     @Transactional
     public ResponseDataDTO<AddressResponseDTO> create(AddressCreateRequestDTO addressCreateRequestDTO) {
-        User user = userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
+        User user = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
         Address address = this.addressRepository.save(new Address(user, addressCreateRequestDTO.getCep(), addressCreateRequestDTO.getState(), addressCreateRequestDTO.getCity(), addressCreateRequestDTO.getDistrict(), addressCreateRequestDTO.getRoad(), addressCreateRequestDTO.getNumber(), addressCreateRequestDTO.getComplement()));
@@ -61,7 +61,7 @@ public class AddressService {
 
     @Transactional
     public ResponseDataDTO<AddressResponseDTO> update(AddressUpdateRequestDTO addressUpdateRequestDTO) {
-        User userAuthenticated = userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
+        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
         Address address = this.addressRepository.findById(addressUpdateRequestDTO.getIdAddress())
@@ -111,7 +111,7 @@ public class AddressService {
     }
 
     public ResponseDataDTO<PageResponseDTO<AddressResponseDTO>> findAddressesByUser(Pageable pageable) {
-        User userAuthenticated = userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
+        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
         Page<Address> addresses = this.addressRepository.findByUser(userAuthenticated, pageable);
@@ -141,7 +141,7 @@ public class AddressService {
 
         try {
             String url = String.format("http://viacep.com.br/ws/%s/json/", formattedCep);
-            ViaCepResponseDTO response = restTemplate.getForObject(url, ViaCepResponseDTO.class);
+            ViaCepResponseDTO response = this.restTemplate.getForObject(url, ViaCepResponseDTO.class);
 
             if (response == null || response.getCep() == null)
                 throw new InvalidCepException(String.format("CEP '%s' não encontrado", formattedCep));
@@ -155,7 +155,7 @@ public class AddressService {
 
     @Transactional
     public void deleteAddress(Long idAddress) {
-        User userAuthenticated = userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
+        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
         Address address = this.addressRepository.findById(idAddress)

@@ -23,12 +23,12 @@ public class AuditingService {
     public void saveAudit(ActionAuditingDTO actionAuditingDTO) {
         try {
             Object previousValueObj = actionAuditingDTO.getPreviousValue() != null ?
-                    objectMapper.readTree(actionAuditingDTO.getPreviousValue()) :
-                    objectMapper.createObjectNode();
+                    this.objectMapper.readTree(actionAuditingDTO.getPreviousValue()) :
+                    this.objectMapper.createObjectNode();
 
             Object newValueObj = actionAuditingDTO.getNewValue() != null ?
-                    objectMapper.readTree(actionAuditingDTO.getNewValue()) :
-                    objectMapper.createObjectNode();
+                    this.objectMapper.readTree(actionAuditingDTO.getNewValue()) :
+                    this.objectMapper.createObjectNode();
 
             DescriptionAuditingDTO descriptionAuditingDTO = new DescriptionAuditingDTO(
                     actionAuditingDTO.getAction(),
@@ -37,7 +37,7 @@ public class AuditingService {
                     newValueObj
             );
 
-            String description = objectMapper.writeValueAsString(descriptionAuditingDTO);
+            String description = this.objectMapper.writeValueAsString(descriptionAuditingDTO);
             Auditing auditing = new Auditing(
                     actionAuditingDTO.getIdUser(),
                     actionAuditingDTO.getChangeType(),

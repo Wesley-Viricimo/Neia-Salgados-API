@@ -26,10 +26,10 @@ public class EmailService {
                                     .build())
                             .subject(Content.builder().data(subject).build())
                             .build())
-                    .source(senderEmail)
+                    .source(this.senderEmail)
                     .build();
 
-            sesClient.sendEmail(request);
+            this.sesClient.sendEmail(request);
         } catch (SesException e) {
             throw new RuntimeException("Erro ao enviar email: " + e.getMessage());
         }

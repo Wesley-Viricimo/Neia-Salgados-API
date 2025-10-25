@@ -88,13 +88,13 @@ public class UserRegisterService {
 
     @Transactional
     public ResponseDataDTO<UserResponseDTO> activateAccount(ActivateAccountRequestDTO activateAccountRequestDTO) {
-        User user = userRepository.findByEmail(activateAccountRequestDTO.getEmail())
+        User user = this.userRepository.findByEmail(activateAccountRequestDTO.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
 
         if (user.isActive())
             throw new DataIntegrityViolationException("Usuário já está ativo no sistema");
 
-        UserActivationCode activationCode = userActivationCodeRepository.findByUserAndCode(user, activateAccountRequestDTO.getCode().toUpperCase())
+        UserActivationCode activationCode = this.userActivationCodeRepository.findByUserAndCode(user, activateAccountRequestDTO.getCode().toUpperCase())
                 .orElseThrow(() -> new DataIntegrityViolationException("Código de ativação inválido"));
 
         LocalDateTime currentTime = LocalDateTime.now();
@@ -103,8 +103,8 @@ public class UserRegisterService {
         user.setUpdatedAt(currentTime);
         activationCode.setConfirmed(true);
         activationCode.setUpdatedAt(currentTime);
-        userActivationCodeRepository.save(activationCode);
-        userRepository.save(user);
+        this.userActivationCodeRepository.save(activationCode);
+        this.userRepository.save(user);
 
         UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário ativo com sucesso"));
@@ -113,13 +113,13 @@ public class UserRegisterService {
 
     @Transactional
     public ResponseDataDTO<UserResponseDTO> resendActivationCode(ResendActivationCodeRequestDTO resendActivationCodeRequestDTO) {
-        User user = userRepository.findByEmail(resendActivationCodeRequestDTO.getEmail())
+        User user = this.userRepository.findByEmail(resendActivationCodeRequestDTO.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não está cadastrado no sistema"));
 
         if (user.isActive())
             throw new DataIntegrityViolationException(String.format("Usuário email '%s' já está ativo no sistema, não é necessário reenviar o email para ativação da conta", resendActivationCodeRequestDTO.getEmail()));
 
-        UserActivationCode activationCode = userActivationCodeRepository.findByUser(user)
+        UserActivationCode activationCode = this.userActivationCodeRepository.findByUser(user)
                 .orElseThrow(() ->  new DataIntegrityViolationException(String.format("Código de ativação não encontrado para o email '%s'", resendActivationCodeRequestDTO.getEmail())));
 
         LocalDateTime currentTime = LocalDateTime.now();
@@ -129,7 +129,7 @@ public class UserRegisterService {
             throw new DataIntegrityViolationException("Código de ativação já foi reenviado recentemente. Por favor, aguarde 3 minutos antes de solicitar um novo código.");
 
         activationCode.setUpdatedAt(currentTime);
-        userActivationCodeRepository.save(activationCode);
+        this.userActivationCodeRepository.save(activationCode);
 
         this.sendActivationEmail(user.getEmail(), activationCode.getCode(), user.getSurname());
 
