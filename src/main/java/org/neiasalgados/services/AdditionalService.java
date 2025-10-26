@@ -12,6 +12,7 @@ import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Additional;
 import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
+import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.repository.AdditionalRepository;
 import org.neiasalgados.security.AuthenticationFacade;
 import org.springframework.data.domain.Page;
@@ -37,7 +38,7 @@ public class AdditionalService {
 
     @Transactional
     public ResponseDataDTO<AdditionalResponseDTO> createAdditional(AdditionalCreateRequestDTO additionalCreateRequestDTO) {
-        if (this.additionalRepository.findByDescription(additionalCreateRequestDTO.getDescription()).isPresent())
+        if (this.additionalRepository.findByDescriptionIgnoreCase(additionalCreateRequestDTO.getDescription()).isPresent())
             throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalCreateRequestDTO.getDescription()));
 
         if (additionalCreateRequestDTO.getPrice() <= 0)
@@ -88,28 +89,29 @@ public class AdditionalService {
     @Transactional
     public ResponseDataDTO<AdditionalResponseDTO> updateAdditional(AdditionalUpdateRequestDTO additionalUpdateRequestDTO) {
         Additional additional = this.additionalRepository.findById(additionalUpdateRequestDTO.getIdAdditional())
-                .orElseThrow(() -> new DataIntegrityViolationException(String.format("Adicional com ID '%d' não encontrado", additionalUpdateRequestDTO.getIdAdditional())));
+                .orElseThrow(() -> new NotFoundException(String.format("Adicional com ID '%d' não encontrado", additionalUpdateRequestDTO.getIdAdditional())));
+
+        Additional newAdditional = additional;
+
+        if (additionalUpdateRequestDTO.getDescription() != null && !additionalUpdateRequestDTO.getDescription().isEmpty()) {
+            Optional<Additional> existingAdditional = this.additionalRepository.findByDescriptionIgnoreCase(additionalUpdateRequestDTO.getDescription());
+
+            if (existingAdditional.isPresent() && !existingAdditional.get().getIdAdditional().equals(additional.getIdAdditional()))
+                throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalUpdateRequestDTO.getDescription()));
+
+            newAdditional.setDescription(additionalUpdateRequestDTO.getDescription());
+        }
+
+        if (additionalUpdateRequestDTO.getPrice() != null) {
+            if (additionalUpdateRequestDTO.getPrice() <= 0)
+                throw new DataIntegrityViolationException("O valor do adicional deve ser maior que zero");
+            newAdditional.setPrice(additionalUpdateRequestDTO.getPrice());
+        }
 
         try {
             String previousJson = objectMapper.writeValueAsString(additional);
-
-            if (additionalUpdateRequestDTO.getDescription() != null && !additionalUpdateRequestDTO.getDescription().isEmpty()) {
-                Optional<Additional> existingAdditional = this.additionalRepository.findByDescription(additionalUpdateRequestDTO.getDescription());
-
-                if (existingAdditional.isPresent() && !existingAdditional.get().getIdAdditional().equals(additional.getIdAdditional()))
-                    throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalUpdateRequestDTO.getDescription()));
-
-                additional.setDescription(additionalUpdateRequestDTO.getDescription());
-            }
-
-            if (additionalUpdateRequestDTO.getPrice() != null) {
-                if (additionalUpdateRequestDTO.getPrice() <= 0)
-                    throw new DataIntegrityViolationException("O valor do adicional deve ser maior que zero");
-                additional.setPrice(additionalUpdateRequestDTO.getPrice());
-            }
-
-            this.additionalRepository.save(additional);
-            String newJson = objectMapper.writeValueAsString(additional);
+            this.additionalRepository.save(newAdditional);
+            String newJson = objectMapper.writeValueAsString(newAdditional);
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
@@ -135,7 +137,7 @@ public class AdditionalService {
     @Transactional
     public void deleteAdditional(Long idAdditional) {
         Additional additional = this.additionalRepository.findById(idAdditional)
-                .orElseThrow(() -> new DataIntegrityViolationException(String.format("Adicional com ID '%d' não encontrado", idAdditional)));
+                .orElseThrow(() -> new NotFoundException(String.format("Adicional com ID '%d' não encontrado", idAdditional)));
 
         try {
             String previousJson = objectMapper.writeValueAsString(additional);

@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class AdditionalUpdateRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
-    @NotNull(message = "O campo 'idAdditional' não pode ser nulo")
+    @NotNull(message = "O campo 'idAdditional' não pode ser vazio")
     private Long idAdditional;
     private String description;
     private Double price;
