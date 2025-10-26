@@ -3,7 +3,6 @@ package org.neiasalgados.domain.dto.response;
 import java.io.Serializable;
 
 public class CategoryResponseDTO implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     private Long idCategory;

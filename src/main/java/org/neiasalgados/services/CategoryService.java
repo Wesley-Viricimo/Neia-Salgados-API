@@ -26,7 +26,6 @@ import java.util.Optional;
 
 @Service
 public class CategoryService {
-
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final AuditingService auditingService;
