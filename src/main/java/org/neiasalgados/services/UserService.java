@@ -119,7 +119,7 @@ public class UserService {
         this.userActivationCodeRepository.save(activationCode);
 
         try {
-            String userJson = objectMapper.writeValueAsString(user);
+            String userJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     userAdmin.getIdUser(),
                     "CADASTRO DE USUARIO ADMINISTRADOR",
@@ -166,13 +166,12 @@ public class UserService {
             throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem atribuir a role 'ADMINISTRADOR'");
 
         try {
-            String beforeChangeJson = objectMapper.writeValueAsString(user);
-
+            String beforeChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
             user.setRole(userRole);
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
 
-            String afterChangeJson = objectMapper.writeValueAsString(user);
+            String afterChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     userAdmin.getIdUser(),
                     "ALTERAÇÃO DE ROLE DE USUÁRIO",
@@ -208,13 +207,12 @@ public class UserService {
             throw new DataIntegrityViolationException("Somente usuários com a role 'DESENVOLVEDOR' podem alterar a atividade de usuários 'ADMINISTRADOR' ou 'DESENVOLVEDOR'");
 
         try {
-            String beforeChangeJson = objectMapper.writeValueAsString(user);
-
+            String beforeChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
             user.setActive(changeUserActivitieRequestDTO.isActive());
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
 
-            String afterChangeJson = objectMapper.writeValueAsString(user);
+            String afterChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     userAdmin.getIdUser(),
                     "ALTERAÇÃO DE ATIVIDADE DE USUÁRIO",

@@ -50,7 +50,7 @@ public class AdditionalService {
         ));
 
         try {
-            String categoryJson = objectMapper.writeValueAsString(additional);
+            String categoryJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "CADASTRO DE ADICIONAL",
@@ -107,9 +107,9 @@ public class AdditionalService {
         }
 
         try {
-            String previousJson = objectMapper.writeValueAsString(additional);
+            String previousJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
             this.additionalRepository.save(newAdditional);
-            String newJson = objectMapper.writeValueAsString(newAdditional);
+            String newJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(newAdditional));
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
@@ -138,7 +138,7 @@ public class AdditionalService {
                 .orElseThrow(() -> new NotFoundException(String.format("Adicional com ID '%d' não encontrado", idAdditional)));
 
         try {
-            String previousJson = objectMapper.writeValueAsString(additional);
+            String previousJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
             this.additionalRepository.delete(additional);
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(

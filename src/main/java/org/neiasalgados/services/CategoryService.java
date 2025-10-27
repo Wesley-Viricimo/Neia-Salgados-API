@@ -49,7 +49,7 @@ public class CategoryService {
         this.categoryRepository.save(categoryEntity);
 
         try {
-            String categoryJson = objectMapper.writeValueAsString(categoryEntity);
+            String categoryJson = objectMapper.writeValueAsString(new CategoryResponseDTO(categoryEntity));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "CADASTRO DE CATEGORIA",
@@ -67,7 +67,6 @@ public class CategoryService {
 
         CategoryResponseDTO categoryDTO = new CategoryResponseDTO(categoryEntity);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
-
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
@@ -96,11 +95,10 @@ public class CategoryService {
 
         try {
             String previousJson = objectMapper.writeValueAsString(category);
-
             category.setDescription(categoryRequestDTO.getDescription());
             this.categoryRepository.save(category);
 
-            String newJson = objectMapper.writeValueAsString(category);
+            String newJson = objectMapper.writeValueAsString(new CategoryResponseDTO(category));
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
@@ -119,7 +117,6 @@ public class CategoryService {
 
         CategoryResponseDTO categoryDTO = new CategoryResponseDTO(category);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
-
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
@@ -134,7 +131,7 @@ public class CategoryService {
             throw new DataIntegrityViolationException(String.format("Não é possível excluir a categoria '%s' pois existem produtos vinculados a ela", category.getDescription()));
 
         try {
-            String categoryJson = objectMapper.writeValueAsString(category);
+            String categoryJson = objectMapper.writeValueAsString(new CategoryResponseDTO(category));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "EXCLUSÃO DE CATEGORIA",

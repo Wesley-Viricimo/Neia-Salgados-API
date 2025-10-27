@@ -81,7 +81,7 @@ public class ProductService {
                 category));
 
         try {
-            String productJson = objectMapper.writeValueAsString(productEntity);
+            String productJson = objectMapper.writeValueAsString(new ProductResponseDTO(productEntity));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "CADASTRO DE PRODUTO",
@@ -111,7 +111,7 @@ public class ProductService {
             this.s3Service.deleteFile(product.getUrlImage());
 
         try {
-            String productJson = objectMapper.writeValueAsString(product);
+            String productJson = objectMapper.writeValueAsString(new ProductResponseDTO(product));
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "EXCLUSÃO DE PRODUTO",
