@@ -27,9 +27,6 @@ public class Order implements Serializable {
     @JoinColumn(name = "ID_ADDRESS")
     private Address address;
 
-    @Column(name = "USER_SURNAME", length = 100, nullable = false)
-    private String userSurname;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "ORDER_STATUS", nullable = false)
     private OrderStatus orderStatus;
@@ -65,10 +62,9 @@ public class Order implements Serializable {
 
     public Order() {}
 
-    public Order(User user, Address address, String userSurname, OrderStatus orderStatus, PaymentMethods paymentMethod, TypeOfDelivery typeOfDelivery, Double totalAdditional, Double totalPrice, List<OrderItem> items, List<OrderAdditional> additionals) {
+    public Order(User user, Address address, OrderStatus orderStatus, PaymentMethods paymentMethod, TypeOfDelivery typeOfDelivery, Double totalAdditional, Double totalPrice, List<OrderItem> items, List<OrderAdditional> additionals) {
         this.user = user;
         this.address = address;
-        this.userSurname = userSurname;
         this.orderStatus = orderStatus;
         this.paymentMethod = paymentMethod;
         this.typeOfDelivery = typeOfDelivery;
@@ -102,14 +98,6 @@ public class Order implements Serializable {
 
     public void setAddress(Address address) {
         this.address = address;
-    }
-
-    public String getUserSurname() {
-        return userSurname;
-    }
-
-    public void setUserSurname(String userSurname) {
-        this.userSurname = userSurname;
     }
 
     public OrderStatus getOrderStatus() {
