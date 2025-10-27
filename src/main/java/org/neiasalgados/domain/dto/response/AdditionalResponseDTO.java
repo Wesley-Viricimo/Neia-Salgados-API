@@ -1,5 +1,7 @@
 package org.neiasalgados.domain.dto.response;
 
+import org.neiasalgados.domain.entity.Additional;
+
 import java.io.Serializable;
 
 public class AdditionalResponseDTO implements Serializable {
@@ -11,10 +13,10 @@ public class AdditionalResponseDTO implements Serializable {
 
     public AdditionalResponseDTO() { }
 
-    public AdditionalResponseDTO(Long idAdditional, String description, Double price) {
-        this.idAdditional = idAdditional;
-        this.description = description;
-        this.price = price;
+    public AdditionalResponseDTO(Additional additional) {
+        this.idAdditional = additional.getIdAdditional();
+        this.description = additional.getDescription();
+        this.price = additional.getPrice();
     }
 
     public Long getIdAdditional() {

@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface AdditionalRepository extends JpaRepository<Additional, Long> {
-    Optional<Additional> findByDescriptionIgnoreCase(String description);
-    Page<Additional> findByDescriptionContaining(String description, Pageable pageable);
+    Optional<Additional> findByDescriptionContainingIgnoreCase(String description);
+    Page<Additional> findByDescriptionContainingIgnoreCase(String description, Pageable pageable);
 }

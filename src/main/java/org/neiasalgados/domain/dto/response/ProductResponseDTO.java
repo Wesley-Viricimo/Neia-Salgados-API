@@ -17,7 +17,7 @@ public class ProductResponseDTO implements Serializable {
 
     public ProductResponseDTO(Product product) {
         this.idProduct = product.getIdProduct();
-        this.category = new CategoryResponseDTO(product.getCategory().getIdCategory(), product.getCategory().getDescription());
+        this.category = new CategoryResponseDTO(product.getCategory());
         this.title = product.getTitle();
         this.description = product.getDescription();
         this.urlImage = product.getUrlImage();

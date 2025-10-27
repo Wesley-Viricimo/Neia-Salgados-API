@@ -1,5 +1,7 @@
 package org.neiasalgados.domain.dto.response;
 
+import org.neiasalgados.domain.entity.Category;
+
 import java.io.Serializable;
 
 public class CategoryResponseDTO implements Serializable {
@@ -11,9 +13,9 @@ public class CategoryResponseDTO implements Serializable {
 
     public CategoryResponseDTO() { }
 
-    public CategoryResponseDTO(Long idCategory, String description) {
-        this.idCategory = idCategory;
-        this.description = description;
+    public CategoryResponseDTO(Category category) {
+        this.idCategory = category.getIdCategory();
+        this.description = category.getDescription();
     }
 
     public Long getIdCategory() {

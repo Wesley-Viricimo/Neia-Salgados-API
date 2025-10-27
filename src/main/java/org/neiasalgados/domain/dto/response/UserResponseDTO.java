@@ -1,5 +1,6 @@
 package org.neiasalgados.domain.dto.response;
 
+import org.neiasalgados.domain.entity.User;
 import org.neiasalgados.domain.enums.UserRole;
 
 public class UserResponseDTO {
@@ -18,14 +19,14 @@ public class UserResponseDTO {
 
     public UserResponseDTO() {}
 
-    public UserResponseDTO(String name, String surname, String cpf, String phone, String email, UserRole role, boolean isActive) {
-        this.name = name;
-        this.surname = surname;
-        this.cpf = maskCpf(cpf);
-        this.phone = phone;
-        this.email = email;
-        this.role = role;
-        this.isActive = isActive;
+    public UserResponseDTO(User user) {
+        this.name = user.getName();
+        this.surname = user.getSurname();
+        this.cpf = maskCpf(user.getCpf());
+        this.phone = user.getPhone();
+        this.email = user.getEmail();
+        this.role = user.getRole();
+        this.isActive = user.isActive();
     }
 
     public String getName() {

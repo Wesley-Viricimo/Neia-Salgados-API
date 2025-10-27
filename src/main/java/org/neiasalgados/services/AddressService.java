@@ -41,20 +41,18 @@ public class AddressService {
         User user = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
-        Address address = this.addressRepository.save(new Address(user, addressCreateRequestDTO.getCep(), addressCreateRequestDTO.getState(), addressCreateRequestDTO.getCity(), addressCreateRequestDTO.getDistrict(), addressCreateRequestDTO.getRoad(), addressCreateRequestDTO.getNumber(), addressCreateRequestDTO.getComplement()));
+        Address address = this.addressRepository.save(new Address(
+                user,
+                addressCreateRequestDTO.getCep(),
+                addressCreateRequestDTO.getState(),
+                addressCreateRequestDTO.getCity(),
+                addressCreateRequestDTO.getDistrict(),
+                addressCreateRequestDTO.getRoad(),
+                addressCreateRequestDTO.getNumber(),
+                addressCreateRequestDTO.getComplement()
+        ));
 
-        AddressResponseDTO addressResponseDTO = new AddressResponseDTO(
-                address.getIdAddress(),
-                new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive()),
-                address.getCep(),
-                address.getState(),
-                address.getCity(),
-                address.getDistrict(),
-                address.getRoad(),
-                address.getNumber(),
-                address.getComplement()
-        );
-
+        AddressResponseDTO addressResponseDTO = new AddressResponseDTO(address);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço cadastrado com sucesso"));
         return new ResponseDataDTO<>(addressResponseDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -94,18 +92,7 @@ public class AddressService {
         address.setUpdatedAt(java.time.LocalDateTime.now());
         Address updatedAddress = this.addressRepository.save(address);
 
-        AddressResponseDTO addressResponseDTO = new AddressResponseDTO(
-                updatedAddress.getIdAddress(),
-                new UserResponseDTO(userAuthenticated.getName(), userAuthenticated.getSurname(), userAuthenticated.getCpf(), userAuthenticated.getPhone(), userAuthenticated.getEmail(), userAuthenticated.getRole(), userAuthenticated.isActive()),
-                updatedAddress.getCep(),
-                updatedAddress.getState(),
-                updatedAddress.getCity(),
-                updatedAddress.getDistrict(),
-                updatedAddress.getRoad(),
-                updatedAddress.getNumber(),
-                updatedAddress.getComplement()
-        );
-
+        AddressResponseDTO addressResponseDTO = new AddressResponseDTO(updatedAddress);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço atualizado com sucesso"));
         return new ResponseDataDTO<>(addressResponseDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -115,18 +102,7 @@ public class AddressService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
 
         Page<Address> addresses = this.addressRepository.findByUser(userAuthenticated, pageable);
-        Page<AddressResponseDTO> addressResponseDTO = addresses.map(address -> new AddressResponseDTO(
-                address.getIdAddress(),
-                new UserResponseDTO(userAuthenticated.getName(), userAuthenticated.getSurname(), userAuthenticated.getCpf(), userAuthenticated.getPhone(), userAuthenticated.getEmail(), userAuthenticated.getRole(), userAuthenticated.isActive()),
-                address.getCep(),
-                address.getState(),
-                address.getCity(),
-                address.getDistrict(),
-                address.getRoad(),
-                address.getNumber(),
-                address.getComplement()
-        ));
-
+        Page<AddressResponseDTO> addressResponseDTO = addresses.map(AddressResponseDTO::new);
         PageResponseDTO<AddressResponseDTO> pageResponse = new PageResponseDTO<>(addressResponseDTO);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereços listados com sucesso"));
 

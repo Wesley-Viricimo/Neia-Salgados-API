@@ -42,12 +42,10 @@ public class CategoryService {
 
     @Transactional
     public ResponseDataDTO<CategoryResponseDTO> createCategory(CategoryRequestDTO categoryRequestDTO) {
-        String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
+        if (this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryRequestDTO.getDescription()).isPresent())
+            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryRequestDTO.getDescription()));
 
-        if (this.categoryRepository.findByDescription(upperDescription).isPresent())
-            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
-
-        Category categoryEntity = new Category(upperDescription);
+        Category categoryEntity = new Category(categoryRequestDTO.getDescription());
         this.categoryRepository.save(categoryEntity);
 
         try {
@@ -67,7 +65,7 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(categoryEntity.getIdCategory(), categoryEntity.getDescription());
+        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(categoryEntity);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria cadastrada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
@@ -76,14 +74,12 @@ public class CategoryService {
     public ResponseDataDTO<PageResponseDTO<CategoryResponseDTO>> findAll(String description, Pageable pageable) {
         Page<Category> categoryPage = Optional.ofNullable(description)
                 .filter(desc -> !desc.isEmpty())
-                .map(desc -> this.categoryRepository.findByDescriptionContaining(desc.toUpperCase(), pageable))
+                .map(desc -> this.categoryRepository.findByDescriptionContainingIgnoreCase(desc.toUpperCase(), pageable))
                 .orElseGet(() -> this.categoryRepository.findAll(pageable));
 
-        Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(category -> new CategoryResponseDTO(category.getIdCategory(), category.getDescription()));
-
+        Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(CategoryResponseDTO::new);
         PageResponseDTO<CategoryResponseDTO> pageResponse = new PageResponseDTO<>(categoryDTOPage);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
-
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
@@ -93,16 +89,15 @@ public class CategoryService {
                 new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory))
         );
 
-        String upperDescription = categoryRequestDTO.getDescription().toUpperCase();
-        Optional<Category> existingCategory = this.categoryRepository.findByDescription(upperDescription);
+        Optional<Category> existingCategory = this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryRequestDTO.getDescription());
 
         if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(idCategory))
-            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", upperDescription));
+            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryRequestDTO.getDescription()));
 
         try {
             String previousJson = objectMapper.writeValueAsString(category);
 
-            category.setDescription(upperDescription);
+            category.setDescription(categoryRequestDTO.getDescription());
             this.categoryRepository.save(category);
 
             String newJson = objectMapper.writeValueAsString(category);
@@ -122,7 +117,7 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(category.getIdCategory(), category.getDescription());
+        CategoryResponseDTO categoryDTO = new CategoryResponseDTO(category);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categoria atualizada com sucesso"));
 
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());

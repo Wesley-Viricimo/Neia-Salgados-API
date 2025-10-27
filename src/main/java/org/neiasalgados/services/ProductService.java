@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import org.neiasalgados.domain.dto.ActionAuditingDTO;
 import org.neiasalgados.domain.dto.request.ProductCreateRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
+import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ProductResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Category;
@@ -15,6 +16,8 @@ import org.neiasalgados.exceptions.UnsupportedMediaTypeException;
 import org.neiasalgados.repository.CategoryRepository;
 import org.neiasalgados.repository.ProductRepository;
 import org.neiasalgados.security.AuthenticationFacade;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +44,18 @@ public class ProductService {
         this.objectMapper = objectMapper;
     }
 
+    public ResponseDataDTO<PageResponseDTO<ProductResponseDTO>> findAll(String title, Pageable pageable) {
+        Page<Product> productPage = Optional.ofNullable(title)
+                .filter(titl -> !titl.isEmpty())
+                .map(titl -> this.productRepository.findByTitleContainingIgnoreCase(titl, pageable))
+                .orElseGet(() -> this.productRepository.findAll(pageable));
+
+        Page<ProductResponseDTO> productResponseDTOPage = productPage.map(ProductResponseDTO::new);
+        PageResponseDTO<ProductResponseDTO> pageResponse = new PageResponseDTO<>(productResponseDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Produtos listados com sucesso"));
+        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
+    }
+
     @Transactional
     public ResponseDataDTO<ProductResponseDTO> createProduct(ProductCreateRequestDTO productCreateRequestDTO, MultipartFile multipartFile) throws IOException {
         if (multipartFile != null) {
@@ -51,7 +66,7 @@ public class ProductService {
         Category category = this.categoryRepository.findById(productCreateRequestDTO.getIdCategory())
                 .orElseThrow(() -> new DataIntegrityViolationException(String.format("Categoria com ID %d não encontrada.", productCreateRequestDTO.getIdCategory())));
 
-        if (this.productRepository.findByTitleIgnoreCase(productCreateRequestDTO.getTitle()).isPresent())
+        if (this.productRepository.findByTitleContainingIgnoreCase(productCreateRequestDTO.getTitle()).isPresent())
             throw new DataIntegrityViolationException(String.format("Já existe um produto cadastrado com o título '%s'", productCreateRequestDTO.getTitle()));
 
         if (productCreateRequestDTO.getPrice() <= 0)
@@ -85,5 +100,4 @@ public class ProductService {
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Produto cadastrado com sucesso"));
         return new ResponseDataDTO<>(productResponseDTO, messageResponse, HttpStatus.CREATED.value());
     }
-
 }

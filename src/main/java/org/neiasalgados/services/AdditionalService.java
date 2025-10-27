@@ -38,7 +38,7 @@ public class AdditionalService {
 
     @Transactional
     public ResponseDataDTO<AdditionalResponseDTO> createAdditional(AdditionalCreateRequestDTO additionalCreateRequestDTO) {
-        if (this.additionalRepository.findByDescriptionIgnoreCase(additionalCreateRequestDTO.getDescription()).isPresent())
+        if (this.additionalRepository.findByDescriptionContainingIgnoreCase(additionalCreateRequestDTO.getDescription()).isPresent())
             throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalCreateRequestDTO.getDescription()));
 
         if (additionalCreateRequestDTO.getPrice() <= 0)
@@ -66,7 +66,7 @@ public class AdditionalService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional.getIdAdditional(), additional.getDescription(), additional.getPrice());
+        AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicional cadastrado com sucesso"));
 
         return new ResponseDataDTO<>(additionalResponseDTO, messageResponse, HttpStatus.CREATED.value());
@@ -75,14 +75,12 @@ public class AdditionalService {
     public ResponseDataDTO<PageResponseDTO<AdditionalResponseDTO>> findAll(String description, Pageable pageable) {
         Page<Additional> additionalPage = Optional.ofNullable(description)
                 .filter(desc -> !desc.isEmpty())
-                .map(desc -> this.additionalRepository.findByDescriptionContaining(desc, pageable))
+                .map(desc -> this.additionalRepository.findByDescriptionContainingIgnoreCase(desc, pageable))
                 .orElseGet(() -> this.additionalRepository.findAll(pageable));
 
-        Page<AdditionalResponseDTO> additionalDTOPage = additionalPage.map(additional -> new AdditionalResponseDTO(additional.getIdAdditional(), additional.getDescription(), additional.getPrice()));
-
+        Page<AdditionalResponseDTO> additionalDTOPage = additionalPage.map(AdditionalResponseDTO::new);
         PageResponseDTO<AdditionalResponseDTO> pageResponse = new PageResponseDTO<>(additionalDTOPage);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicionais listados com sucesso"));
-
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
@@ -94,7 +92,7 @@ public class AdditionalService {
         Additional newAdditional = additional;
 
         if (additionalUpdateRequestDTO.getDescription() != null && !additionalUpdateRequestDTO.getDescription().isEmpty()) {
-            Optional<Additional> existingAdditional = this.additionalRepository.findByDescriptionIgnoreCase(additionalUpdateRequestDTO.getDescription());
+            Optional<Additional> existingAdditional = this.additionalRepository.findByDescriptionContainingIgnoreCase(additionalUpdateRequestDTO.getDescription());
 
             if (existingAdditional.isPresent() && !existingAdditional.get().getIdAdditional().equals(additional.getIdAdditional()))
                 throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalUpdateRequestDTO.getDescription()));
@@ -128,7 +126,7 @@ public class AdditionalService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional.getIdAdditional(), additional.getDescription(), additional.getPrice());
+        AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicional atualizado com sucesso"));
 
         return new ResponseDataDTO<>(additionalResponseDTO, messageResponse, HttpStatus.CREATED.value());

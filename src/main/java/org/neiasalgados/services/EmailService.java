@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.ses.model.*;
 
 @Service
 public class EmailService {
-
     private final SesClient sesClient;
     private final String senderEmail;
 

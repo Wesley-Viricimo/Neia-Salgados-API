@@ -1,6 +1,7 @@
 package org.neiasalgados.domain.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
+import org.neiasalgados.domain.entity.Address;
 
 public class AddressResponseDTO {
     private Long idAddress;
@@ -22,16 +23,16 @@ public class AddressResponseDTO {
 
     public AddressResponseDTO() { }
 
-    public AddressResponseDTO(Long idAddress, UserResponseDTO user, String cep, String state, String city, String district, String road, String number, String complement) {
-        this.idAddress = idAddress;
-        this.user = user;
-        this.cep = cep;
-        this.state = state;
-        this.city = city;
-        this.district = district;
-        this.road = road;
-        this.number = number;
-        this.complement = complement;
+    public AddressResponseDTO(Address address) {
+        this.idAddress = address.getIdAddress();
+        this.user = new UserResponseDTO(address.getUser());
+        this.cep = address.getCep();
+        this.state = address.getState();
+        this.city = address.getCity();
+        this.district = address.getDistrict();
+        this.road = address.getRoad();
+        this.number = address.getNumber();
+        this.complement = address.getComplement();
     }
 
     public Long getIdAddress() {

@@ -58,7 +58,7 @@ public class UserService {
                 .map(nm -> userRepository.findByNameContainingIgnoreCase(nm, pageable))
                 .orElseGet(() -> userRepository.findAll(pageable));
 
-        Page<UserResponseDTO> userResponseDTOPage = userPage.map(user -> new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive()));
+        Page<UserResponseDTO> userResponseDTOPage = userPage.map(UserResponseDTO::new);
         PageResponseDTO<UserResponseDTO> pageResponse = new PageResponseDTO<>(userResponseDTOPage);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuários listados com sucesso"));
 
@@ -135,7 +135,7 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        UserResponseDTO userDTO = new UserResponseDTO(user);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Usuário cadastrado com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -188,7 +188,7 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        UserResponseDTO userDTO = new UserResponseDTO(user);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Role do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -230,7 +230,7 @@ public class UserService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        UserResponseDTO userDTO = new UserResponseDTO(user);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Atividade do usuário atualizada com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.CREATED.value());
     }
@@ -278,7 +278,7 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        UserResponseDTO userDTO = new UserResponseDTO(user.getName(), user.getSurname(), user.getCpf(), user.getPhone(), user.getEmail(), user.getRole(), user.isActive());
+        UserResponseDTO userDTO = new UserResponseDTO(user);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Dados do usuário atualizados com sucesso"));
         return new ResponseDataDTO<>(userDTO, messageResponse, HttpStatus.OK.value());
     }
