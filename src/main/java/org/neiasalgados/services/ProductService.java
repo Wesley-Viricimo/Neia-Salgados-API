@@ -12,6 +12,7 @@ import org.neiasalgados.domain.entity.Category;
 import org.neiasalgados.domain.entity.Product;
 import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
+import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.exceptions.UnsupportedMediaTypeException;
 import org.neiasalgados.repository.CategoryRepository;
 import org.neiasalgados.repository.ProductRepository;
@@ -46,8 +47,8 @@ public class ProductService {
 
     public ResponseDataDTO<PageResponseDTO<ProductResponseDTO>> findAll(String title, Pageable pageable) {
         Page<Product> productPage = Optional.ofNullable(title)
-                .filter(titl -> !titl.isEmpty())
-                .map(titl -> this.productRepository.findByTitleContainingIgnoreCase(titl, pageable))
+                .filter(tte -> !tte.isEmpty())
+                .map(tte -> this.productRepository.findByTitleContainingIgnoreCase(tte, pageable))
                 .orElseGet(() -> this.productRepository.findAll(pageable));
 
         Page<ProductResponseDTO> productResponseDTOPage = productPage.map(ProductResponseDTO::new);
@@ -99,5 +100,33 @@ public class ProductService {
         ProductResponseDTO productResponseDTO = new ProductResponseDTO(productEntity);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Produto cadastrado com sucesso"));
         return new ResponseDataDTO<>(productResponseDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public void deleteProduct(Long idProduct) {
+        Product product = this.productRepository.findById(idProduct)
+                .orElseThrow(() -> new NotFoundException(String.format("Produto com ID %d não encontrado.", idProduct)));
+
+        if (product.getUrlImage() != null)
+            this.s3Service.deleteFile(product.getUrlImage());
+
+        try {
+            String productJson = objectMapper.writeValueAsString(product);
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    this.authenticationFacade.getAuthenticatedUserId(),
+                    "EXCLUSÃO DE PRODUTO",
+                    "PRODUTO",
+                    product.getIdProduct(),
+                    productJson,
+                    null,
+                    ChangeType.DELETE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
+
+        this.productRepository.delete(product);
     }
 }

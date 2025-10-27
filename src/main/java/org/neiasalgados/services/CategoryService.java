@@ -150,6 +150,6 @@ public class CategoryService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        this.categoryRepository.deleteById(idCategory);
+        this.categoryRepository.delete(category);
     }
 }
