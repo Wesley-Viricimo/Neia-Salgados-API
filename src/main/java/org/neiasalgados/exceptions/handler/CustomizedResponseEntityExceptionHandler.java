@@ -81,6 +81,13 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UnsupportedMediaTypeException.class)
+    public final ResponseEntity<ExceptionResponse> handleUnsupportedMediaTypeException(UnsupportedMediaTypeException ex) {
+        var messageResponse = new MessageResponseDTO("error", "Erro", List.of(ex.getMessage()));
+        ExceptionResponse exceptionResponse = new ExceptionResponse(messageResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<String> errorDetails = ex.getBindingResult()
