@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.neiasalgados.domain.dto.ActionAuditingDTO;
 import org.neiasalgados.domain.dto.request.ProductCreateRequestDTO;
+import org.neiasalgados.domain.dto.request.ProductUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ProductResponseDTO;
@@ -99,6 +100,77 @@ public class ProductService {
 
         ProductResponseDTO productResponseDTO = new ProductResponseDTO(productEntity);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Produto cadastrado com sucesso"));
+        return new ResponseDataDTO<>(productResponseDTO, messageResponse, HttpStatus.CREATED.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<ProductResponseDTO> updateProduct(ProductUpdateRequestDTO productUpdateRequestDTO, MultipartFile multipartFile) throws IOException {
+        Product product = this.productRepository.findById(productUpdateRequestDTO.getIdProduct())
+                .orElseThrow(() -> new NotFoundException(String.format("Produto com ID %d não encontrado.", productUpdateRequestDTO.getIdProduct())));
+
+        if (multipartFile != null) {
+            if (!multipartFile.getContentType().equals("image/jpeg") && !multipartFile.getContentType().equals("image/png"))
+                throw new UnsupportedMediaTypeException("A imagem deve estar no formato JPEG ou PNG.");
+        }
+
+        ProductResponseDTO originalProduct = new ProductResponseDTO(product);
+
+        if (productUpdateRequestDTO.getTitle() != null) {
+            Optional<Product> productExists = this.productRepository.findByTitleContainingIgnoreCase(productUpdateRequestDTO.getTitle());
+            if (productExists.isPresent() && !productExists.get().getIdProduct().equals(productUpdateRequestDTO.getIdProduct()))
+                throw new DataIntegrityViolationException(String.format("Já existe um produto cadastrado com o título '%s'", productUpdateRequestDTO.getTitle()));
+
+            product.setTitle(productUpdateRequestDTO.getTitle());
+        }
+
+        if (productUpdateRequestDTO.getDescription() != null)
+            product.setDescription(productUpdateRequestDTO.getDescription());
+
+        if (productUpdateRequestDTO.getPrice() != null) {
+            if (productUpdateRequestDTO.getPrice() <= 0)
+                throw new DataIntegrityViolationException("O preço do produto deve ser maior que zero.");
+
+            product.setPrice(productUpdateRequestDTO.getPrice());
+        }
+
+        if (productUpdateRequestDTO.getIdCategory() != null) {
+            Category category = this.categoryRepository.findById(productUpdateRequestDTO.getIdCategory())
+                    .orElseThrow(() -> new DataIntegrityViolationException(String.format("Categoria com ID %d não encontrada.", productUpdateRequestDTO.getIdCategory())));
+
+            product.setCategory(category);
+        }
+
+        if (multipartFile != null) {
+            if (product.getUrlImage() != null)
+                this.s3Service.deleteFile(product.getUrlImage());
+
+            String newImageUrl = this.s3Service.uploadFile(multipartFile);
+            product.setUrlImage(newImageUrl);
+        }
+
+        this.productRepository.save(product);
+
+        try {
+            String previousJson = objectMapper.writeValueAsString(originalProduct);
+            String newJson = objectMapper.writeValueAsString(new ProductResponseDTO(product));
+
+            ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
+                    this.authenticationFacade.getAuthenticatedUserId(),
+                    "ATUALIZAÇÃO DE PRODUTO",
+                    "PRODUTO",
+                    product.getIdProduct(),
+                    previousJson,
+                    newJson,
+                    ChangeType.UPDATE
+            );
+
+            this.auditingService.saveAudit(actionAuditingDTO);
+        } catch (Exception e) {
+            System.err.println("Erro ao registrar auditoria: " + e.getMessage());
+        }
+
+        ProductResponseDTO productResponseDTO = new ProductResponseDTO(product);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Produto atualizado com sucesso"));
         return new ResponseDataDTO<>(productResponseDTO, messageResponse, HttpStatus.CREATED.value());
     }
 

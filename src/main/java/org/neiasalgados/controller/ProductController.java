@@ -2,6 +2,7 @@ package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
 import org.neiasalgados.domain.dto.request.ProductCreateRequestDTO;
+import org.neiasalgados.domain.dto.request.ProductUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ProductResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
@@ -46,6 +47,16 @@ public class ProductController {
             @RequestPart(value = "file", required = false) MultipartFile image
     ) throws IOException {
         ResponseDataDTO<ProductResponseDTO> response = productService.createProduct(productCreateRequestDTO, image);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
+    @PatchMapping
+    public ResponseEntity<ResponseDataDTO<ProductResponseDTO>> update(
+            @RequestPart("product") @Valid ProductUpdateRequestDTO productUpdateRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile image
+    ) throws IOException {
+        ResponseDataDTO<ProductResponseDTO> response = productService.updateProduct(productUpdateRequestDTO, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
