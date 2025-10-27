@@ -1,10 +1,11 @@
 package org.neiasalgados.controller;
 
 import jakarta.validation.Valid;
+import org.neiasalgados.domain.dto.request.CategoryUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.CategoryResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
-import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
+import org.neiasalgados.domain.dto.request.CategoryCreateRequestDTO;
 import org.neiasalgados.domain.enums.UserRole;
 import org.neiasalgados.security.annotations.AllowRole;
 import org.neiasalgados.services.CategoryService;
@@ -38,15 +39,15 @@ public class CategoryController {
 
     @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
     @PostMapping
-    public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> create(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO) {
-        ResponseDataDTO<CategoryResponseDTO> response = categoryService.createCategory(categoryRequestDTO);
+    public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> create(@Valid @RequestBody CategoryCreateRequestDTO categoryCreateRequestDTO) {
+        ResponseDataDTO<CategoryResponseDTO> response = categoryService.createCategory(categoryCreateRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @AllowRole(allowedRoles = {UserRole.DESENVOLVEDOR, UserRole.ADMINISTRADOR, UserRole.COMERCIAL})
-    @PutMapping(value = "/{idCategory}")
-    public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> updateCategory(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO, @PathVariable(value = "idCategory") Long idCategory) {
-        ResponseDataDTO<CategoryResponseDTO> response = categoryService.updateCategory(categoryRequestDTO, idCategory);
+    @PutMapping
+    public ResponseEntity<ResponseDataDTO<CategoryResponseDTO>> updateCategory(@Valid @RequestBody CategoryUpdateRequestDTO categoryUpdateRequestDTO) {
+        ResponseDataDTO<CategoryResponseDTO> response = categoryService.updateCategory(categoryUpdateRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

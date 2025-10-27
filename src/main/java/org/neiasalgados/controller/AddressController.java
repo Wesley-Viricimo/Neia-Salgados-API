@@ -25,18 +25,6 @@ public class AddressController {
         this.addressService = addressService;
     }
 
-    @PostMapping
-    public ResponseEntity<ResponseDataDTO<AddressResponseDTO>> createAddress(@Valid @RequestBody AddressCreateRequestDTO addressCreateRequestDTO) {
-        ResponseDataDTO<AddressResponseDTO> response = addressService.create(addressCreateRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PatchMapping("/update")
-    public ResponseEntity<ResponseDataDTO<AddressResponseDTO>> updateAddress(@Valid @RequestBody AddressUpdateRequestDTO addressUpdateRequestDTO) {
-        ResponseDataDTO<AddressResponseDTO> response = addressService.update(addressUpdateRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping
     ResponseEntity<ResponseDataDTO<PageResponseDTO<AddressResponseDTO>>> findAddressesByUser(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -51,6 +39,18 @@ public class AddressController {
     @GetMapping("/find-address-by-cep/{cep}")
     public ResponseEntity<ResponseDataDTO<ViaCepResponseDTO>> findAddressByCep(@PathVariable(value = "cep") String cep) {
         return ResponseEntity.ok(addressService.findAddressByCep(cep));
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseDataDTO<AddressResponseDTO>> createAddress(@Valid @RequestBody AddressCreateRequestDTO addressCreateRequestDTO) {
+        ResponseDataDTO<AddressResponseDTO> response = addressService.create(addressCreateRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<ResponseDataDTO<AddressResponseDTO>> updateAddress(@Valid @RequestBody AddressUpdateRequestDTO addressUpdateRequestDTO) {
+        ResponseDataDTO<AddressResponseDTO> response = addressService.update(addressUpdateRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/{idAddress}")
