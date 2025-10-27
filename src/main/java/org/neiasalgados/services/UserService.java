@@ -165,13 +165,15 @@ public class UserService {
         if (userRole == UserRole.ADMINISTRADOR && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
             throw new DataIntegrityViolationException("Apenas usuários com a role 'DESENVOLVEDOR' podem atribuir a role 'ADMINISTRADOR'");
 
-        try {
-            String beforeChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
-            user.setRole(userRole);
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
+        UserResponseDTO originalUser = new UserResponseDTO(user);
+        user.setRole(userRole);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
+        try {
+            String beforeChangeJson = objectMapper.writeValueAsString(originalUser);
             String afterChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
+
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     userAdmin.getIdUser(),
                     "ALTERAÇÃO DE ROLE DE USUÁRIO",
@@ -206,13 +208,15 @@ public class UserService {
         if ((user.getRole() == UserRole.ADMINISTRADOR || user.getRole() == UserRole.DESENVOLVEDOR) && userAdmin.getRole() != UserRole.DESENVOLVEDOR)
             throw new DataIntegrityViolationException("Somente usuários com a role 'DESENVOLVEDOR' podem alterar a atividade de usuários 'ADMINISTRADOR' ou 'DESENVOLVEDOR'");
 
-        try {
-            String beforeChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
-            user.setActive(changeUserActivitieRequestDTO.isActive());
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
+        UserResponseDTO originalUser = new UserResponseDTO(user);
+        user.setActive(changeUserActivitieRequestDTO.isActive());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
+        try {
+            String beforeChangeJson = objectMapper.writeValueAsString(originalUser);
             String afterChangeJson = objectMapper.writeValueAsString(new UserResponseDTO(user));
+
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     userAdmin.getIdUser(),
                     "ALTERAÇÃO DE ATIVIDADE DE USUÁRIO",
@@ -240,38 +244,38 @@ public class UserService {
 
         List<String> duplicateFields = new ArrayList<>();
 
-        if (userUpdateRequestDTO.getEmail() != null && !userUpdateRequestDTO.getEmail().isEmpty())
-            userRepository.findByEmailAndIdUserNot(userUpdateRequestDTO.getEmail(), user.getIdUser())
-                    .ifPresent(u -> duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userUpdateRequestDTO.getEmail())));
+        if (userUpdateRequestDTO.getName() != null)
+            user.setName(userUpdateRequestDTO.getName());
 
-        if (userUpdateRequestDTO.getPhone() != null && !userUpdateRequestDTO.getPhone().isEmpty())
-            userRepository.findByPhoneAndIdUserNot(userUpdateRequestDTO.getPhone(), user.getIdUser())
-                    .ifPresent(u -> duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userUpdateRequestDTO.getPhone())));
+        if (userUpdateRequestDTO.getSurname() != null)
+            user.setSurname(userUpdateRequestDTO.getSurname());
 
-        if (userUpdateRequestDTO.getCpf() != null && !userUpdateRequestDTO.getCpf().isEmpty())
+        if (userUpdateRequestDTO.getCpf() != null) {
             userRepository.findByCpfAndIdUserNot(userUpdateRequestDTO.getCpf(), user.getIdUser())
                     .ifPresent(u -> duplicateFields.add(String.format("CPF '%s' já cadastrado no sistema", userUpdateRequestDTO.getCpf())));
 
+            user.setCpf(userUpdateRequestDTO.getCpf());
+        }
+
+        if (userUpdateRequestDTO.getPhone() != null) {
+            userRepository.findByPhoneAndIdUserNot(userUpdateRequestDTO.getPhone(), user.getIdUser())
+                    .ifPresent(u -> duplicateFields.add(String.format("Telefone '%s' já cadastrado no sistema", userUpdateRequestDTO.getPhone())));
+
+            user.setPhone(userUpdateRequestDTO.getPhone());
+        }
+
+        if (userUpdateRequestDTO.getEmail() != null) {
+            userRepository.findByEmailAndIdUserNot(userUpdateRequestDTO.getEmail(), user.getIdUser())
+                    .ifPresent(u -> duplicateFields.add(String.format("Email '%s' já cadastrado no sistema", userUpdateRequestDTO.getEmail())));
+
+            user.setEmail(userUpdateRequestDTO.getEmail());
+        }
+
+        if (userUpdateRequestDTO.getPassword() != null)
+            user.setPassword(passwordEncoder.encode(userUpdateRequestDTO.getPassword()));
+
         if (!duplicateFields.isEmpty())
             throw new DuplicateFieldsException(duplicateFields);
-
-        if (userUpdateRequestDTO.getName() != null && !userUpdateRequestDTO.getName().isEmpty())
-            user.setName(userUpdateRequestDTO.getName());
-
-        if (userUpdateRequestDTO.getSurname() != null && !userUpdateRequestDTO.getSurname().isEmpty())
-            user.setSurname(userUpdateRequestDTO.getSurname());
-
-        if (userUpdateRequestDTO.getCpf() != null && !userUpdateRequestDTO.getCpf().isEmpty())
-            user.setCpf(userUpdateRequestDTO.getCpf());
-
-        if (userUpdateRequestDTO.getPhone() != null && !userUpdateRequestDTO.getPhone().isEmpty())
-            user.setPhone(userUpdateRequestDTO.getPhone());
-
-        if (userUpdateRequestDTO.getEmail() != null && !userUpdateRequestDTO.getEmail().isEmpty())
-            user.setEmail(userUpdateRequestDTO.getEmail());
-
-        if (userUpdateRequestDTO.getPassword() != null && !userUpdateRequestDTO.getPassword().isEmpty())
-            user.setPassword(passwordEncoder.encode(userUpdateRequestDTO.getPassword()));
 
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);

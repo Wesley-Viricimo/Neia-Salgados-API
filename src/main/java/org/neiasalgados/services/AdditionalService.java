@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +36,18 @@ public class AdditionalService {
         this.auditingService = auditingService;
         this.authenticationFacade = authenticationFacade;
         this.objectMapper = objectMapper;
+    }
+
+    public ResponseDataDTO<PageResponseDTO<AdditionalResponseDTO>> findAll(String description, Pageable pageable) {
+        Page<Additional> additionalPage = Optional.ofNullable(description)
+                .filter(desc -> !desc.isEmpty())
+                .map(desc -> this.additionalRepository.findByDescriptionContainingIgnoreCase(desc, pageable))
+                .orElseGet(() -> this.additionalRepository.findAll(pageable));
+
+        Page<AdditionalResponseDTO> additionalDTOPage = additionalPage.map(AdditionalResponseDTO::new);
+        PageResponseDTO<AdditionalResponseDTO> pageResponse = new PageResponseDTO<>(additionalDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicionais listados com sucesso"));
+        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
     @Transactional
@@ -68,20 +82,7 @@ public class AdditionalService {
 
         AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicional cadastrado com sucesso"));
-
         return new ResponseDataDTO<>(additionalResponseDTO, messageResponse, HttpStatus.CREATED.value());
-    }
-
-    public ResponseDataDTO<PageResponseDTO<AdditionalResponseDTO>> findAll(String description, Pageable pageable) {
-        Page<Additional> additionalPage = Optional.ofNullable(description)
-                .filter(desc -> !desc.isEmpty())
-                .map(desc -> this.additionalRepository.findByDescriptionContainingIgnoreCase(desc, pageable))
-                .orElseGet(() -> this.additionalRepository.findAll(pageable));
-
-        Page<AdditionalResponseDTO> additionalDTOPage = additionalPage.map(AdditionalResponseDTO::new);
-        PageResponseDTO<AdditionalResponseDTO> pageResponse = new PageResponseDTO<>(additionalDTOPage);
-        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicionais listados com sucesso"));
-        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
     @Transactional
@@ -89,27 +90,30 @@ public class AdditionalService {
         Additional additional = this.additionalRepository.findById(additionalUpdateRequestDTO.getIdAdditional())
                 .orElseThrow(() -> new NotFoundException(String.format("Adicional com ID '%d' não encontrado", additionalUpdateRequestDTO.getIdAdditional())));
 
-        Additional newAdditional = additional;
+        AdditionalResponseDTO originalAdditional = new AdditionalResponseDTO(additional);
 
-        if (additionalUpdateRequestDTO.getDescription() != null && !additionalUpdateRequestDTO.getDescription().isEmpty()) {
+        if (additionalUpdateRequestDTO.getDescription() != null) {
             Optional<Additional> existingAdditional = this.additionalRepository.findByDescriptionContainingIgnoreCase(additionalUpdateRequestDTO.getDescription());
 
             if (existingAdditional.isPresent() && !existingAdditional.get().getIdAdditional().equals(additional.getIdAdditional()))
                 throw new DataIntegrityViolationException(String.format("Já existe um adicional cadastrado com a descrição '%s'", additionalUpdateRequestDTO.getDescription()));
 
-            newAdditional.setDescription(additionalUpdateRequestDTO.getDescription());
+            additional.setDescription(additionalUpdateRequestDTO.getDescription());
         }
 
         if (additionalUpdateRequestDTO.getPrice() != null) {
             if (additionalUpdateRequestDTO.getPrice() <= 0)
                 throw new DataIntegrityViolationException("O valor do adicional deve ser maior que zero");
-            newAdditional.setPrice(additionalUpdateRequestDTO.getPrice());
+
+            additional.setPrice(additionalUpdateRequestDTO.getPrice());
         }
 
+        additional.setUpdatedAt(LocalDateTime.now());
+        this.additionalRepository.save(additional);
+
         try {
-            String previousJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
-            this.additionalRepository.save(newAdditional);
-            String newJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(newAdditional));
+            String previousJson = objectMapper.writeValueAsString(originalAdditional);
+            String newJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
@@ -128,7 +132,6 @@ public class AdditionalService {
 
         AdditionalResponseDTO additionalResponseDTO = new AdditionalResponseDTO(additional);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Adicional atualizado com sucesso"));
-
         return new ResponseDataDTO<>(additionalResponseDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
@@ -139,8 +142,6 @@ public class AdditionalService {
 
         try {
             String previousJson = objectMapper.writeValueAsString(new AdditionalResponseDTO(additional));
-            this.additionalRepository.delete(additional);
-
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(
                     this.authenticationFacade.getAuthenticatedUserId(),
                     "EXCLUSÃO DE ADICIONAL",
@@ -156,6 +157,6 @@ public class AdditionalService {
             System.err.println("Erro ao registrar auditoria: " + e.getMessage());
         }
 
-        this.additionalRepository.deleteById(idAdditional);
+        this.additionalRepository.delete(additional);
     }
 }

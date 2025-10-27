@@ -3,12 +3,13 @@ package org.neiasalgados.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.neiasalgados.domain.dto.ActionAuditingDTO;
+import org.neiasalgados.domain.dto.request.CategoryUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.CategoryResponseDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Category;
-import org.neiasalgados.domain.dto.request.CategoryRequestDTO;
+import org.neiasalgados.domain.dto.request.CategoryCreateRequestDTO;
 import org.neiasalgados.domain.entity.Product;
 import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
@@ -40,12 +41,24 @@ public class CategoryService {
         this.objectMapper = objectMapper;
     }
 
-    @Transactional
-    public ResponseDataDTO<CategoryResponseDTO> createCategory(CategoryRequestDTO categoryRequestDTO) {
-        if (this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryRequestDTO.getDescription()).isPresent())
-            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryRequestDTO.getDescription()));
+    public ResponseDataDTO<PageResponseDTO<CategoryResponseDTO>> findAll(String description, Pageable pageable) {
+        Page<Category> categoryPage = Optional.ofNullable(description)
+                .filter(desc -> !desc.isEmpty())
+                .map(desc -> this.categoryRepository.findByDescriptionContainingIgnoreCase(desc.toUpperCase(), pageable))
+                .orElseGet(() -> this.categoryRepository.findAll(pageable));
 
-        Category categoryEntity = new Category(categoryRequestDTO.getDescription());
+        Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(CategoryResponseDTO::new);
+        PageResponseDTO<CategoryResponseDTO> pageResponse = new PageResponseDTO<>(categoryDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
+        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
+    }
+
+    @Transactional
+    public ResponseDataDTO<CategoryResponseDTO> createCategory(CategoryCreateRequestDTO categoryCreateRequestDTO) {
+        if (this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryCreateRequestDTO.getDescription()).isPresent())
+            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryCreateRequestDTO.getDescription()));
+
+        Category categoryEntity = new Category(categoryCreateRequestDTO.getDescription());
         this.categoryRepository.save(categoryEntity);
 
         try {
@@ -70,34 +83,22 @@ public class CategoryService {
         return new ResponseDataDTO<>(categoryDTO, messageResponse, HttpStatus.CREATED.value());
     }
 
-    public ResponseDataDTO<PageResponseDTO<CategoryResponseDTO>> findAll(String description, Pageable pageable) {
-        Page<Category> categoryPage = Optional.ofNullable(description)
-                .filter(desc -> !desc.isEmpty())
-                .map(desc -> this.categoryRepository.findByDescriptionContainingIgnoreCase(desc.toUpperCase(), pageable))
-                .orElseGet(() -> this.categoryRepository.findAll(pageable));
-
-        Page<CategoryResponseDTO> categoryDTOPage = categoryPage.map(CategoryResponseDTO::new);
-        PageResponseDTO<CategoryResponseDTO> pageResponse = new PageResponseDTO<>(categoryDTOPage);
-        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Categorias listadas com sucesso"));
-        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
-    }
-
     @Transactional
-    public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryRequestDTO categoryRequestDTO, Long idCategory) {
-        Category category = this.categoryRepository.findById(idCategory).orElseThrow(() ->
-                new NotFoundException(String.format("Categoria com id '%d' não encontrada", idCategory))
+    public ResponseDataDTO<CategoryResponseDTO> updateCategory(CategoryUpdateRequestDTO categoryUpdateRequestDTO) {
+        Category category = this.categoryRepository.findById(categoryUpdateRequestDTO.getIdCategory()).orElseThrow(() ->
+                new NotFoundException(String.format("Categoria com id '%d' não encontrada", categoryUpdateRequestDTO.getIdCategory()))
         );
+        CategoryResponseDTO originalCategory = new CategoryResponseDTO(category);
+        Optional<Category> existingCategory = this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryUpdateRequestDTO.getDescription());
 
-        Optional<Category> existingCategory = this.categoryRepository.findByDescriptionContainingIgnoreCase(categoryRequestDTO.getDescription());
+        if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(categoryUpdateRequestDTO.getIdCategory()))
+            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryUpdateRequestDTO.getDescription()));
 
-        if (existingCategory.isPresent() && !existingCategory.get().getIdCategory().equals(idCategory))
-            throw new DataIntegrityViolationException(String.format("Já existe uma categoria cadastrada com a descrição '%s'", categoryRequestDTO.getDescription()));
+        category.setDescription(categoryUpdateRequestDTO.getDescription());
+        this.categoryRepository.save(category);
 
         try {
-            String previousJson = objectMapper.writeValueAsString(category);
-            category.setDescription(categoryRequestDTO.getDescription());
-            this.categoryRepository.save(category);
-
+            String previousJson = objectMapper.writeValueAsString(originalCategory);
             String newJson = objectMapper.writeValueAsString(new CategoryResponseDTO(category));
 
             ActionAuditingDTO actionAuditingDTO = new ActionAuditingDTO(

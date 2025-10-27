@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -34,6 +35,38 @@ public class AddressService {
         this.userRepository = userRepository;
         this.authenticationFacade = authenticationFacade;
         this.restTemplate = new RestTemplate();
+    }
+
+    public ResponseDataDTO<PageResponseDTO<AddressResponseDTO>> findAddressesByUser(Pageable pageable) {
+        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
+
+        Page<Address> addresses = this.addressRepository.findByUser(userAuthenticated, pageable);
+        Page<AddressResponseDTO> addressResponseDTO = addresses.map(AddressResponseDTO::new);
+        PageResponseDTO<AddressResponseDTO> pageResponse = new PageResponseDTO<>(addressResponseDTO);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereços listados com sucesso"));
+
+        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
+    }
+
+    public ResponseDataDTO<ViaCepResponseDTO> findAddressByCep(String cep) {
+        String formattedCep = cep.replaceAll("\\D", "");
+
+        if (formattedCep.length() != 8)
+            throw new InvalidCepException("CEP deve conter 8 dígitos");
+
+        try {
+            String url = String.format("http://viacep.com.br/ws/%s/json/", formattedCep);
+            ViaCepResponseDTO response = this.restTemplate.getForObject(url, ViaCepResponseDTO.class);
+
+            if (response == null || response.getCep() == null)
+                throw new InvalidCepException(String.format("CEP '%s' não encontrado", formattedCep));
+
+            MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço encontrado para o CEP informado"));
+            return new ResponseDataDTO<>(response, messageResponse, HttpStatus.OK.value());
+        } catch (RestClientException e) {
+            throw new InvalidCepException("Erro ao consultar o CEP. Verifique se o CEP é válido");
+        }
     }
 
     @Transactional
@@ -68,65 +101,33 @@ public class AddressService {
         if (!userAuthenticated.getIdUser().equals(address.getUser().getIdUser()))
             throw new DataIntegrityViolationException("Endereço não pertence ao usuário autenticado");
 
-        if (addressUpdateRequestDTO.getCep() != null && !addressUpdateRequestDTO.getCep().isEmpty())
+        if (addressUpdateRequestDTO.getCep() != null)
             address.setCep(addressUpdateRequestDTO.getCep());
 
-        if (addressUpdateRequestDTO.getState() != null && !addressUpdateRequestDTO.getState().isEmpty())
+        if (addressUpdateRequestDTO.getState() != null)
             address.setState(addressUpdateRequestDTO.getState());
 
-        if (addressUpdateRequestDTO.getCity() != null && !addressUpdateRequestDTO.getCity().isEmpty())
+        if (addressUpdateRequestDTO.getCity() != null)
             address.setCity(addressUpdateRequestDTO.getCity());
 
-        if (addressUpdateRequestDTO.getDistrict() != null && !addressUpdateRequestDTO.getDistrict().isEmpty())
+        if (addressUpdateRequestDTO.getDistrict() != null)
             address.setDistrict(addressUpdateRequestDTO.getDistrict());
 
-        if (addressUpdateRequestDTO.getRoad() != null && !addressUpdateRequestDTO.getRoad().isEmpty())
+        if (addressUpdateRequestDTO.getRoad() != null)
             address.setRoad(addressUpdateRequestDTO.getRoad());
 
-        if (addressUpdateRequestDTO.getNumber() != null && !addressUpdateRequestDTO.getNumber().isEmpty())
+        if (addressUpdateRequestDTO.getNumber() != null)
             address.setNumber(addressUpdateRequestDTO.getNumber());
 
-        if (addressUpdateRequestDTO.getComplement() != null && !addressUpdateRequestDTO.getComplement().isEmpty())
+        if (addressUpdateRequestDTO.getComplement() != null)
             address.setComplement(addressUpdateRequestDTO.getComplement());
 
-        address.setUpdatedAt(java.time.LocalDateTime.now());
+        address.setUpdatedAt(LocalDateTime.now());
         Address updatedAddress = this.addressRepository.save(address);
 
         AddressResponseDTO addressResponseDTO = new AddressResponseDTO(updatedAddress);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço atualizado com sucesso"));
         return new ResponseDataDTO<>(addressResponseDTO, messageResponse, HttpStatus.CREATED.value());
-    }
-
-    public ResponseDataDTO<PageResponseDTO<AddressResponseDTO>> findAddressesByUser(Pageable pageable) {
-        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
-
-        Page<Address> addresses = this.addressRepository.findByUser(userAuthenticated, pageable);
-        Page<AddressResponseDTO> addressResponseDTO = addresses.map(AddressResponseDTO::new);
-        PageResponseDTO<AddressResponseDTO> pageResponse = new PageResponseDTO<>(addressResponseDTO);
-        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereços listados com sucesso"));
-
-        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
-    }
-
-    public ResponseDataDTO<ViaCepResponseDTO> findAddressByCep(String cep) {
-        String formattedCep = cep.replaceAll("\\D", "");
-
-        if (formattedCep.length() != 8)
-            throw new InvalidCepException("CEP deve conter 8 dígitos");
-
-        try {
-            String url = String.format("http://viacep.com.br/ws/%s/json/", formattedCep);
-            ViaCepResponseDTO response = this.restTemplate.getForObject(url, ViaCepResponseDTO.class);
-
-            if (response == null || response.getCep() == null)
-                throw new InvalidCepException(String.format("CEP '%s' não encontrado", formattedCep));
-
-            MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço encontrado para o CEP informado"));
-            return new ResponseDataDTO<>(response, messageResponse, HttpStatus.OK.value());
-        } catch (RestClientException e) {
-            throw new InvalidCepException("Erro ao consultar o CEP. Verifique se o CEP é válido");
-        }
     }
 
     @Transactional
