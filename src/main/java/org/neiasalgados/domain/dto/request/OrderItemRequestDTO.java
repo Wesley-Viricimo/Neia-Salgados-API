@@ -11,12 +11,14 @@ public class OrderItemRequestDTO implements Serializable {
     private Long idProduct;
     @NotNull(message = "O campo 'quantity' não pode ser vazio")
     private Integer quantity;
+    private String comment;
 
     public OrderItemRequestDTO() {}
 
-    public OrderItemRequestDTO(Long idProduct, Integer quantity) {
+    public OrderItemRequestDTO(Long idProduct, Integer quantity, String comment) {
         this.idProduct = idProduct;
         this.quantity = quantity;
+        this.comment = comment;
     }
 
     public Long getIdProduct() {
@@ -25,5 +27,9 @@ public class OrderItemRequestDTO implements Serializable {
 
     public Integer getQuantity() {
         return quantity;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }
