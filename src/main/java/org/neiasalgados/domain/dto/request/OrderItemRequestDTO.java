@@ -1,7 +1,6 @@
 package org.neiasalgados.domain.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-
 import java.io.Serializable;
 
 public class OrderItemRequestDTO implements Serializable {

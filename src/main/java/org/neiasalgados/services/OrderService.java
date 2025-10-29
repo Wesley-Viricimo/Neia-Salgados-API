@@ -14,7 +14,6 @@ import org.neiasalgados.domain.entity.*;
 import org.neiasalgados.domain.enums.OrderStatus;
 import org.neiasalgados.domain.enums.PaymentMethods;
 import org.neiasalgados.domain.enums.TypeOfDelivery;
-import org.neiasalgados.domain.enums.UserRole;
 import org.neiasalgados.exceptions.DataIntegrityViolationException;
 import org.neiasalgados.repository.*;
 import org.neiasalgados.security.AuthenticationFacade;
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final AddressRepository addressRepository;
-    private final OrderItemRepository orderItemRepository;
     private final AdditionalRepository additionalRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -37,11 +35,10 @@ public class OrderService {
     private final AuthenticationFacade authenticationFacade;
     private final ObjectMapper objectMapper;
 
-    public OrderService(OrderRepository orderRepository, AddressRepository addressRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository, AdditionalRepository additionalRepository, UserRepository userRepository, AuditingService auditingService, AuthenticationFacade authenticationFacade, ObjectMapper objectMapper) {
+    public OrderService(OrderRepository orderRepository, AddressRepository addressRepository, ProductRepository productRepository, AdditionalRepository additionalRepository, UserRepository userRepository, AuditingService auditingService, AuthenticationFacade authenticationFacade, ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.addressRepository = addressRepository;
         this.productRepository = productRepository;
-        this.orderItemRepository = orderItemRepository;
         this.additionalRepository = additionalRepository;
         this.userRepository = userRepository;
         this.auditingService = auditingService;
@@ -69,6 +66,7 @@ public class OrderService {
 
         OrderItemsResultDTO orderItemsResultDTO = getOrderItems(orderRequestDTO.getOrderItems());
         OrderAdditionalsResultDTO orderAdditionalsResultDTO = getOrderAdditionals(orderRequestDTO.getOrderAdditionals());
+        Double totalOrderPrice = orderItemsResultDTO.getTotalPrice() + orderAdditionalsResultDTO.getTotalPrice();
 
         Order order = new Order(
                 userAuthenticated,
@@ -77,7 +75,7 @@ public class OrderService {
                 paymentMethod,
                 typeOfDelivery,
                 orderAdditionalsResultDTO.getTotalPrice(),
-                orderItemsResultDTO.getTotalPrice(),
+                totalOrderPrice,
                 orderItemsResultDTO.getItems(),
                 orderAdditionalsResultDTO.getAdditionals()
         );
@@ -100,7 +98,7 @@ public class OrderService {
             totalPriceHolder.updateAndGet(currentTotal -> currentTotal + (product.getPrice() * itemDTO.getQuantity()));
 
             return new OrderItem(
-                    product.getDescription(),
+                    product.getTitle(),
                     product.getPrice(),
                     itemDTO.getQuantity(),
                     itemDTO.getComment()

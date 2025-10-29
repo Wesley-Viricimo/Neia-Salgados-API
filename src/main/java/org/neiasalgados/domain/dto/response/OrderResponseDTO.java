@@ -12,6 +12,7 @@ import java.util.List;
 public class OrderResponseDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long idOrder;
+    private UserResponseDTO user;
     private OrderAddressResponseDTO address;
     private OrderStatus orderStatus;
     private PaymentMethods paymentMethod;
@@ -26,7 +27,8 @@ public class OrderResponseDTO implements Serializable {
 
     public OrderResponseDTO(Order order) {
         this.idOrder = order.getIdOrder();
-        this.address = new OrderAddressResponseDTO(order.getAddress());
+        this.user = new UserResponseDTO(order.getUser());
+        this.address = order.getAddress() != null ? new OrderAddressResponseDTO(order.getAddress()) : null;
         this.orderStatus = order.getOrderStatus();
         this.paymentMethod = order.getPaymentMethod();
         this.typeOfDelivery = order.getTypeOfDelivery();
@@ -43,6 +45,14 @@ public class OrderResponseDTO implements Serializable {
 
     public void setIdOrder(Long idOrder) {
         this.idOrder = idOrder;
+    }
+
+    public UserResponseDTO getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponseDTO user) {
+        this.user = user;
     }
 
     public OrderAddressResponseDTO getAddress() {
