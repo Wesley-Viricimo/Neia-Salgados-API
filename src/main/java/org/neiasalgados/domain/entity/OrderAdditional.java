@@ -32,24 +32,11 @@ public class OrderAdditional implements Serializable {
 
     public OrderAdditional() {}
 
-    public OrderAdditional(Order order, String description, Double price) {
-        this.order = order;
+    public OrderAdditional(String description, Double price) {
         this.description = description;
         this.price = price;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public Long getIdOrderAdditional() {
-        return idOrderAdditional;
-    }
-
-    public void setIdOrderAdditional(Long idOrderAdditional) {
-        this.idOrderAdditional = idOrderAdditional;
-    }
-
-    public Order getOrder() {
-        return order;
     }
 
     public void setOrder(Order order) {

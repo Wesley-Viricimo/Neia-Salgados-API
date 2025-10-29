@@ -38,26 +38,13 @@ public class OrderItem implements Serializable {
 
     public OrderItem() {}
 
-    public OrderItem(Order order, String description, Double price, Integer quantity, String comment) {
-        this.order = order;
+    public OrderItem(String description, Double price, Integer quantity, String comment) {
         this.description = description;
         this.price = price;
         this.quantity = quantity;
         this.comment = comment;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public Long getIdOrderItem() {
-        return idOrderItem;
-    }
-
-    public void setIdOrderItem(Long idOrderItem) {
-        this.idOrderItem = idOrderItem;
-    }
-
-    public Order getOrder() {
-        return order;
     }
 
     public void setOrder(Order order) {
