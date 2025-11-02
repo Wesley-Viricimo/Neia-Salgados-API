@@ -1,5 +1,6 @@
 package org.neiasalgados.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.neiasalgados.domain.entity.Order;
 import org.neiasalgados.domain.enums.OrderStatus;
 import org.neiasalgados.domain.enums.PaymentMethods;
@@ -21,6 +22,7 @@ public class OrderResponseDTO implements Serializable {
     private List<OrderAdditionalResponseDTO> additionals;
     private Double totalAdditional;
     private Double totalPrice;
+    @JsonFormat(pattern = "dd/MM/yyyy hh:mm:ss")
     private LocalDateTime deliveryDate;
 
     public OrderResponseDTO() { }
