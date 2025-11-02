@@ -5,10 +5,13 @@ import org.neiasalgados.domain.dto.request.OrderRequestDTO;
 import org.neiasalgados.domain.dto.request.UpdateOrderStatusRequestDTO;
 import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.OrderResponseDTO;
+import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.*;
 import org.neiasalgados.domain.factory.OrderFactory;
 import org.neiasalgados.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -21,6 +24,14 @@ public class OrderService {
     public OrderService(OrderRepository orderRepository, OrderFactory orderFactory) {
         this.orderRepository = orderRepository;
         this.orderFactory = orderFactory;
+    }
+
+    public ResponseDataDTO<PageResponseDTO<OrderResponseDTO>> findAll(String userName, Boolean isPending, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAllWithFilters(userName, isPending, pageable);
+        Page<OrderResponseDTO> orderDTOPage = orderPage.map(OrderResponseDTO::new);
+        PageResponseDTO<OrderResponseDTO> pageResponse = new PageResponseDTO<>(orderDTOPage);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Pedidos listados com sucesso"));
+        return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
     @Transactional
