@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.neiasalgados.domain.enums.OrderStatus;
 import org.neiasalgados.domain.enums.PaymentMethods;
 import org.neiasalgados.domain.enums.TypeOfDelivery;
+import org.neiasalgados.exceptions.DataIntegrityViolationException;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -62,10 +63,11 @@ public class Order implements Serializable {
 
     public Order() {}
 
-    public Order(User user, Address address, OrderStatus orderStatus, PaymentMethods paymentMethod, TypeOfDelivery typeOfDelivery, Double totalAdditional, Double totalPrice, List<OrderItem> items, List<OrderAdditional> additionals) {
+    public Order(User user, Address address, PaymentMethods paymentMethod, TypeOfDelivery typeOfDelivery, Double totalAdditional, Double totalPrice, List<OrderItem> items, List<OrderAdditional> additionals) {
+        this.validateOrder(user, address, typeOfDelivery, totalAdditional, totalPrice, items);
         this.user = user;
         this.address = address;
-        this.orderStatus = orderStatus;
+        this.orderStatus = OrderStatus.RECEBIDO;
         this.paymentMethod = paymentMethod;
         this.typeOfDelivery = typeOfDelivery;
         this.totalAdditional = totalAdditional;
@@ -178,5 +180,24 @@ public class Order implements Serializable {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    private void validateOrder(User user, Address address, TypeOfDelivery typeOfDelivery, Double totalAdditional, Double totalPrice, List<OrderItem> items) {
+        if (address != null) {
+            if (!address.getUser().getIdUser().equals(user.getIdUser()))
+                throw new DataIntegrityViolationException("Endereço não pertence ao usuário");
+        }
+
+        if (typeOfDelivery == TypeOfDelivery.ENTREGA && address == null)
+            throw new DataIntegrityViolationException("Endereço deve ser fornecido para o tipo de entrega 'ENTREGA'");
+
+        if (items == null || items.isEmpty())
+            throw new DataIntegrityViolationException("Não é permitido realizar um pedido sem itens");
+
+        if (totalPrice < 0)
+            throw new DataIntegrityViolationException("O valor total do pedido não pode ser negativo");
+
+        if (totalAdditional < 0)
+            throw new DataIntegrityViolationException("O valor total dos adicionais não pode ser negativo");
     }
 }
