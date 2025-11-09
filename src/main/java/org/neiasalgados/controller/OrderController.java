@@ -39,6 +39,17 @@ public class OrderController {
         return ResponseEntity.ok(orderService.findAll(userName, isPending, pageable));
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<ResponseDataDTO<PageResponseDTO<OrderResponseDTO>>> findByUser(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "direction", defaultValue = "desc") String direction
+    ) {
+        var dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, "idOrder"));
+        return ResponseEntity.ok(orderService.findByUser(pageable));
+    }
+
     @PostMapping
     public ResponseEntity<ResponseDataDTO<OrderResponseDTO>> create(@Valid @RequestBody OrderRequestDTO orderRequestDTO) {
         ResponseDataDTO<OrderResponseDTO> response = orderService.createOrder(orderRequestDTO);
@@ -49,6 +60,12 @@ public class OrderController {
     @PatchMapping("/update-status")
     public ResponseEntity<ResponseDataDTO<OrderResponseDTO>> updateStatus(@Valid @RequestBody UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
         ResponseDataDTO<OrderResponseDTO> response = orderService.updateOrderStatus(updateOrderStatusRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/cancel/{idOrder}")
+    public ResponseEntity<ResponseDataDTO<OrderResponseDTO>> cancelOrder(@PathVariable Long idOrder) {
+        ResponseDataDTO<OrderResponseDTO> response = orderService.cancelOrder(idOrder);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

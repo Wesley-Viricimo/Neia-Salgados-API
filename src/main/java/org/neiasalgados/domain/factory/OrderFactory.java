@@ -116,6 +116,25 @@ public class OrderFactory {
         return order;
     }
 
+    public Order cancelOrder(Long idOrder) {
+        User userAuthenticated = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new NotFoundException("Usuário autenticado não encontrado"));
+
+        Order order = orderRepository.findById(idOrder)
+                .orElseThrow(() -> new NotFoundException("Pedido com ID " + idOrder + " não encontrado"));
+
+        if (order.getOrderStatus() == OrderStatus.ENTREGUE || order.getOrderStatus() == OrderStatus.CANCELADO)
+            throw new DataIntegrityViolationException("Não é possível cancelar um pedido que já foi entregue ou cancelado");
+
+        if (!userAuthenticated.getIdUser().equals(order.getUser().getIdUser()))
+            throw new DataIntegrityViolationException("O pedido só pode ser cancelado pelo próprio usuário que o realizou");
+
+        order.setOrderStatus(OrderStatus.CANCELADO);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        return order;
+    }
+
     private void linkOrderItems(Order order) {
         order.getItems().forEach(item -> item.setOrder(order));
         order.getAdditionals().forEach(additional -> additional.setOrder(order));

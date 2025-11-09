@@ -1,6 +1,7 @@
 package org.neiasalgados.repository;
 
 import org.neiasalgados.domain.entity.Order;
+import org.neiasalgados.domain.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "(:isPending = false AND o.order_status IN ('ENTREGUE', 'CANCELADO')))",
             nativeQuery = true)
     Page<Order> findAllWithFilters(@Param("userName") String userName, @Param("isPending") Boolean isPending, Pageable pageable);
+
+    Page<Order> findOrderByUser(User user, Pageable pageable);
 }
