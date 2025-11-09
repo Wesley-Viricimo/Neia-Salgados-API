@@ -1,8 +1,6 @@
 package org.neiasalgados.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.neiasalgados.domain.dto.ActionAuditingDTO;
 import org.neiasalgados.domain.dto.request.AdditionalCreateRequestDTO;
 import org.neiasalgados.domain.dto.request.AdditionalUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.AdditionalResponseDTO;
@@ -10,20 +8,14 @@ import org.neiasalgados.domain.dto.response.MessageResponseDTO;
 import org.neiasalgados.domain.dto.response.PageResponseDTO;
 import org.neiasalgados.domain.dto.response.ResponseDataDTO;
 import org.neiasalgados.domain.entity.Additional;
-import org.neiasalgados.domain.enums.ChangeType;
 import org.neiasalgados.domain.factory.AdditionalFactory;
-import org.neiasalgados.exceptions.DataIntegrityViolationException;
-import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.repository.AdditionalRepository;
-import org.neiasalgados.security.AuthenticationFacade;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AdditionalService {

@@ -5,86 +5,42 @@ import org.neiasalgados.domain.dto.request.AddressCreateRequestDTO;
 import org.neiasalgados.domain.dto.request.AddressUpdateRequestDTO;
 import org.neiasalgados.domain.dto.response.*;
 import org.neiasalgados.domain.entity.Address;
-import org.neiasalgados.domain.entity.User;
-import org.neiasalgados.exceptions.DataIntegrityViolationException;
-import org.neiasalgados.exceptions.InvalidCepException;
+import org.neiasalgados.domain.factory.AddressFactory;
 import org.neiasalgados.repository.AddressRepository;
-import org.neiasalgados.repository.UserRepository;
-import org.neiasalgados.security.AuthenticationFacade;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class AddressService {
     private final AddressRepository addressRepository;
-    private final UserRepository userRepository;
-    private final AuthenticationFacade authenticationFacade;
-    private final RestTemplate restTemplate;
+    private final AddressFactory addressFactory;
 
-
-    public AddressService(AddressRepository addressRepository, UserRepository userRepository, AuthenticationFacade authenticationFacade) {
+    public AddressService(AddressRepository addressRepository, AddressFactory addressFactory) {
         this.addressRepository = addressRepository;
-        this.userRepository = userRepository;
-        this.authenticationFacade = authenticationFacade;
-        this.restTemplate = new RestTemplate();
+        this.addressFactory = addressFactory;
     }
 
     public ResponseDataDTO<PageResponseDTO<AddressResponseDTO>> findAddressesByUser(Pageable pageable) {
-        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
-
-        Page<Address> addresses = this.addressRepository.findByUser(userAuthenticated, pageable);
+        Page<Address> addresses = this.addressFactory.findAddressesByUser(pageable);
         Page<AddressResponseDTO> addressResponseDTO = addresses.map(AddressResponseDTO::new);
         PageResponseDTO<AddressResponseDTO> pageResponse = new PageResponseDTO<>(addressResponseDTO);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereços listados com sucesso"));
-
         return new ResponseDataDTO<>(pageResponse, messageResponse, HttpStatus.OK.value());
     }
 
     public ResponseDataDTO<ViaCepResponseDTO> findAddressByCep(String cep) {
-        String formattedCep = cep.replaceAll("\\D", "");
-
-        if (formattedCep.length() != 8)
-            throw new InvalidCepException("CEP deve conter 8 dígitos");
-
-        try {
-            String url = String.format("http://viacep.com.br/ws/%s/json/", formattedCep);
-            ViaCepResponseDTO response = this.restTemplate.getForObject(url, ViaCepResponseDTO.class);
-
-            if (response == null || response.getCep() == null)
-                throw new InvalidCepException(String.format("CEP '%s' não encontrado", formattedCep));
-
-            MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço encontrado para o CEP informado"));
-            return new ResponseDataDTO<>(response, messageResponse, HttpStatus.OK.value());
-        } catch (RestClientException e) {
-            throw new InvalidCepException("Erro ao consultar o CEP. Verifique se o CEP é válido");
-        }
+        ViaCepResponseDTO response = this.addressFactory.getAddressByCep(cep);
+        MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço encontrado para o CEP informado"));
+        return new ResponseDataDTO<>(response, messageResponse, HttpStatus.OK.value());
     }
 
     @Transactional
     public ResponseDataDTO<AddressResponseDTO> create(AddressCreateRequestDTO addressCreateRequestDTO) {
-        User user = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
-
-        Address address = this.addressRepository.save(new Address(
-                user,
-                addressCreateRequestDTO.getCep(),
-                addressCreateRequestDTO.getState(),
-                addressCreateRequestDTO.getCity(),
-                addressCreateRequestDTO.getDistrict(),
-                addressCreateRequestDTO.getRoad(),
-                addressCreateRequestDTO.getNumber(),
-                addressCreateRequestDTO.getComplement()
-        ));
-
+        Address address = this.addressRepository.save(this.addressFactory.createAddress(addressCreateRequestDTO));
         AddressResponseDTO addressResponseDTO = new AddressResponseDTO(address);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço cadastrado com sucesso"));
         return new ResponseDataDTO<>(addressResponseDTO, messageResponse, HttpStatus.CREATED.value());
@@ -92,39 +48,7 @@ public class AddressService {
 
     @Transactional
     public ResponseDataDTO<AddressResponseDTO> update(AddressUpdateRequestDTO addressUpdateRequestDTO) {
-        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
-
-        Address address = this.addressRepository.findById(addressUpdateRequestDTO.getIdAddress())
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("Endereço id '%s' não encontrado", addressUpdateRequestDTO.getIdAddress())));
-
-        if (!userAuthenticated.getIdUser().equals(address.getUser().getIdUser()))
-            throw new DataIntegrityViolationException("Endereço não pertence ao usuário autenticado");
-
-        if (addressUpdateRequestDTO.getCep() != null)
-            address.setCep(addressUpdateRequestDTO.getCep());
-
-        if (addressUpdateRequestDTO.getState() != null)
-            address.setState(addressUpdateRequestDTO.getState());
-
-        if (addressUpdateRequestDTO.getCity() != null)
-            address.setCity(addressUpdateRequestDTO.getCity());
-
-        if (addressUpdateRequestDTO.getDistrict() != null)
-            address.setDistrict(addressUpdateRequestDTO.getDistrict());
-
-        if (addressUpdateRequestDTO.getRoad() != null)
-            address.setRoad(addressUpdateRequestDTO.getRoad());
-
-        if (addressUpdateRequestDTO.getNumber() != null)
-            address.setNumber(addressUpdateRequestDTO.getNumber());
-
-        if (addressUpdateRequestDTO.getComplement() != null)
-            address.setComplement(addressUpdateRequestDTO.getComplement());
-
-        address.setUpdatedAt(LocalDateTime.now());
-        Address updatedAddress = this.addressRepository.save(address);
-
+        Address updatedAddress = this.addressRepository.save(this.addressFactory.updateAddress(addressUpdateRequestDTO));
         AddressResponseDTO addressResponseDTO = new AddressResponseDTO(updatedAddress);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Endereço atualizado com sucesso"));
         return new ResponseDataDTO<>(addressResponseDTO, messageResponse, HttpStatus.CREATED.value());
@@ -132,15 +56,7 @@ public class AddressService {
 
     @Transactional
     public void deleteAddress(Long idAddress) {
-        User userAuthenticated = this.userRepository.findById(this.authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário autenticado não encontrado"));
-
-        Address address = this.addressRepository.findById(idAddress)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("Endereço id '%s' não encontrado", idAddress)));
-
-        if (!userAuthenticated.getIdUser().equals(address.getUser().getIdUser()))
-            throw new DataIntegrityViolationException("Endereço não pertence ao usuário autenticado");
-
+        Address address = this.addressFactory.deleteAddress(idAddress);
         this.addressRepository.delete(address);
     }
 }
