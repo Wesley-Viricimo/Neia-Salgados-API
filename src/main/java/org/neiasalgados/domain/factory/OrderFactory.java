@@ -50,6 +50,13 @@ public class OrderFactory {
         User user = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
                 .orElseThrow(() -> new NotFoundException("Usuário autenticado não encontrado"));
 
+        LocalDateTime twentyMinutesAgo = LocalDateTime.now().minusMinutes(20);
+        if (orderRepository.hasRecentCanceledOrder(user.getIdUser(), twentyMinutesAgo)) {
+            throw new DataIntegrityViolationException("Não é possível criar um novo pedido. Você possui um pedido cancelado nos últimos 20 minutos. " +
+                            "Por favor, aguarde antes de realizar um novo pedido."
+            );
+        }
+
         TypeOfDelivery typeOfDelivery = validateAndGetTypeOfDelivery(dto.getTypeOfDelivery());
         PaymentMethods paymentMethod = validateAndGetPaymentMethod(dto.getPaymentMethod());
 

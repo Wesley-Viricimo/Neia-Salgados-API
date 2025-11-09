@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT o.id_order, o.id_user, o.id_address, o.order_status, o.payment_method, o.type_of_delivery, o.total_additional, o.total_price, o.delivery_date, o.created_at, o.updated_at FROM neia_salgados.t_order o " +
             "INNER JOIN neia_salgados.t_user u ON o.id_user = u.id_user " +
@@ -19,4 +21,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllWithFilters(@Param("userName") String userName, @Param("isPending") Boolean isPending, Pageable pageable);
 
     Page<Order> findOrderByUser(User user, Pageable pageable);
+
+    @Query("SELECT COUNT(o) > 0 FROM T_ORDER o " +
+            "WHERE o.user.idUser = :userId " +
+            "AND o.orderStatus = 'CANCELADO' " +
+            "AND o.updatedAt >= :twentyMinutesAgo")
+    boolean hasRecentCanceledOrder(Long userId, LocalDateTime twentyMinutesAgo);
 }
