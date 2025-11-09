@@ -16,6 +16,8 @@ import org.neiasalgados.exceptions.NotFoundException;
 import org.neiasalgados.repository.*;
 import org.neiasalgados.security.AuthenticationFacade;
 import org.neiasalgados.services.AuditingService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -44,6 +46,13 @@ public class OrderFactory {
         this.auditingService = auditingService;
         this.authenticationFacade = authenticationFacade;
         this.objectMapper = objectMapper;
+    }
+
+    public Page<Order> findOrdersByUser(Pageable pageable) {
+        User user = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
+                .orElseThrow(() -> new NotFoundException("Usuário autenticado não encontrado"));
+
+        return orderRepository.findOrderByUser(user, pageable);
     }
 
     public Order createOrder(OrderRequestDTO dto) {

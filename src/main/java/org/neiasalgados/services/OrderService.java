@@ -21,15 +21,11 @@ import java.util.List;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final OrderFactory orderFactory;
-    private final AuthenticationFacade authenticationFacade;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderFactory orderFactory, AuthenticationFacade authenticationFacade) {
+    public OrderService(OrderRepository orderRepository, OrderFactory orderFactory) {
         this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
         this.orderFactory = orderFactory;
-        this.authenticationFacade = authenticationFacade;
     }
 
     public ResponseDataDTO<PageResponseDTO<OrderResponseDTO>> findAll(String userName, Boolean isPending, Pageable pageable) {
@@ -41,10 +37,7 @@ public class OrderService {
     }
 
     public ResponseDataDTO<PageResponseDTO<OrderResponseDTO>> findByUser(Pageable pageable) {
-        User user = userRepository.findById(authenticationFacade.getAuthenticatedUserId())
-                .orElseThrow(() -> new NotFoundException("Usuário autenticado não encontrado"));
-
-        Page<Order> orderPage = orderRepository.findOrderByUser(user, pageable);
+        Page<Order> orderPage = orderFactory.findOrdersByUser(pageable);
         Page<OrderResponseDTO> orderDTOPage = orderPage.map(OrderResponseDTO::new);
         PageResponseDTO<OrderResponseDTO> pageResponse = new PageResponseDTO<>(orderDTOPage);
         MessageResponseDTO messageResponse = new MessageResponseDTO("success", "Sucesso", List.of("Pedidos listados com sucesso"));
